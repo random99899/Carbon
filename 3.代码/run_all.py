@@ -130,6 +130,8 @@ def write_summary_report(problem_one: dict[str, pd.DataFrame], problem_two: dict
 
 {dataframe_to_markdown(top_total, ".3f")}
 
+省级空间分布热力图进一步表明，高排放区域主要集中在华北、内蒙古及东部沿海工业省份，呈现“资源型高排放区+制造业高排放带”并存的格局。其中内蒙古、山西、新疆、宁夏等资源型地区人均排放和排放强度偏高，山东、河北、江苏、广东等地区则更多体现为经济规模和工业规模驱动。
+
 人均排放压力最高的省份主要为：
 
 {dataframe_to_markdown(top_pc, ".3f")}
@@ -254,6 +256,7 @@ def write_readme() -> None:
 │  ├─ 问题二/                    # STIRPAT系数和OLS拟合图
 │  └─ 问题三/                    # 情景预测和达峰图
 ├─ 3.代码/
+│  ├─ assets/china_provinces.geojson
 │  ├─ 问题一/solve_problem1.py
 │  ├─ 问题二/solve_problem2.py
 │  ├─ 问题三/solve_problem3.py
@@ -294,12 +297,13 @@ python -m venv .venv
 - `数据/附件2：2022 年全国 30 个省份碳排放清单.xlsx`：30省分能源、分部门碳排放清单。
 - `数据/2022省级综合表.xlsx`：已合并人口、GDP、第二产业、城镇化率、排放强度和能源结构指标，是问题一和问题二主表。
 - `数据/全国数据.xlsx`：2019至2024年全国GDP、人口、能源消费总量和煤炭占比，用于辅助情景设定。
+- `3.代码/assets/china_provinces.geojson`：省级行政边界文件，用于绘制问题一省级CO2总量空间分布热力图。
 
 注意：附件1中2025年数据截至2025-09-30，不能直接作为全年值与2019至2024年比较。三情景预测以2024年为基准年。
 
 ## 模型路线
 
-1. 问题一：变异系数、基尼系数、泰尔指数、熵权TOPSIS、K-means聚类。
+1. 问题一：变异系数、基尼系数、泰尔指数、熵权TOPSIS、K-means聚类，并结合省级边界绘制CO2总量空间分布热力图。
 2. 问题二：STIRPAT横截面OLS、VIF共线性检验、岭回归留一交叉验证。
 3. 问题三：STIRPAT系数驱动的三情景递推预测、达峰年份和减排潜力判断。
 4. 问题四：根据分类、驱动因素和情景预测生成差异化政策建议。
@@ -361,6 +365,7 @@ def validate_outputs(problem_one: dict[str, pd.DataFrame], problem_two: dict[str
             "04_2_工业制造高排放型_均值画像雷达图",
             "04_3_中等转型压力型_均值画像雷达图",
             "04_4_经济发达效率型_均值画像雷达图",
+            "05_省级CO2总量空间分布热力图",
         ],
         "问题二": ["05_STIRPAT标准化系数图", "06_OLS拟合值与真实值对比图"],
         "问题三": [

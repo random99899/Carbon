@@ -10,8 +10,9 @@ from __future__ import annotations
 
 使用数据：
 - 输入：数据/2022省级综合表.xlsx，工作表“主表”。
+- 辅助边界：3.代码/assets/china_provinces.geojson，用于绘制省级空间分布热力图。
 - 输出：1.结果/问题一/ 下多个CSV结果文件。
-- 输出图片：2.图片/问题一/01至04号图。
+- 输出图片：2.图片/问题一/01至05号图。
 """
 
 import sys
@@ -22,7 +23,11 @@ ROOT = CODE_ROOT.parent
 sys.pycache_prefix = str(ROOT / ".pycache")
 sys.path.append(str(CODE_ROOT))
 
+import json
 import matplotlib.pyplot as plt
+from matplotlib.collections import PatchCollection
+from matplotlib.patches import Patch
+from matplotlib.patches import Polygon as MplPolygon
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -36,6 +41,40 @@ from common import PROBLEM_FIG_DIRS, PROBLEM_RESULT_DIRS, gini, read_data, requi
 PROBLEM = "问题一"
 RESULT_DIR = PROBLEM_RESULT_DIRS[PROBLEM]
 FIG_DIR = PROBLEM_FIG_DIRS[PROBLEM]
+CHINA_GEOJSON = CODE_ROOT / "assets" / "china_provinces.geojson"
+
+
+def normalize_province_name(name: str) -> str:
+    result = str(name).strip()
+    replacements = {
+        "特别行政区": "",
+        "维吾尔自治区": "",
+        "壮族自治区": "",
+        "回族自治区": "",
+        "自治区": "",
+        "省": "",
+        "市": "",
+    }
+    for old, new in replacements.items():
+        result = result.replace(old, new)
+    return result
+
+
+def geometry_to_polygons(geometry: dict) -> list[np.ndarray]:
+    polygons = []
+    if geometry["type"] == "Polygon":
+        coordinates = [geometry["coordinates"]]
+    elif geometry["type"] == "MultiPolygon":
+        coordinates = geometry["coordinates"]
+    else:
+        return polygons
+    for polygon in coordinates:
+        if not polygon:
+            continue
+        exterior = np.asarray(polygon[0], dtype=float)
+        if len(exterior) >= 3:
+            polygons.append(exterior)
+    return polygons
 
 
 def entropy_topsis(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -243,6 +282,57 @@ def make_problem_one_figures(problem_one: dict[str, pd.DataFrame]) -> None:
     ax.add_artist(type_legend)
     ax.legend(size_handles, size_labels, title=size_header, loc="lower right", frameon=True)
     save_fig(fig, FIG_DIR, "02_人均CO2与碳排放强度散点图")
+
+    if not CHINA_GEOJSON.exists():
+        raise FileNotFoundError(f"缺少中国省级边界文件: {CHINA_GEOJSON}")
+    geojson = json.loads(CHINA_GEOJSON.read_text(encoding="utf-8"))
+    value_map = dict(zip(province["省份"].map(normalize_province_name), province["CO2总量_Mt"]))
+    top_label_provinces = set(province.nlargest(6, "CO2总量_Mt")["省份"].map(normalize_province_name))
+    values = np.array(list(value_map.values()), dtype=float)
+    norm = plt.Normalize(values.min(), values.max())
+    cmap = plt.get_cmap("YlOrRd")
+
+    fig, ax = plt.subplots(figsize=(10.5, 8.2))
+    missing_patches = []
+    data_patches = []
+    data_colors = []
+    label_points = []
+    for feature in geojson["features"]:
+        raw_name = feature.get("properties", {}).get("name", "")
+        if not raw_name:
+            continue
+        province_name = normalize_province_name(raw_name)
+        polygons = geometry_to_polygons(feature["geometry"])
+        if province_name in value_map:
+            color = cmap(norm(value_map[province_name]))
+            for polygon in polygons:
+                data_patches.append(MplPolygon(polygon, closed=True))
+                data_colors.append(color)
+            if province_name in top_label_provinces:
+                center = feature.get("properties", {}).get("centroid") or feature.get("properties", {}).get("center")
+                if center:
+                    label_points.append((province_name, center[0], center[1]))
+        else:
+            for polygon in polygons:
+                missing_patches.append(MplPolygon(polygon, closed=True))
+
+    if missing_patches:
+        ax.add_collection(PatchCollection(missing_patches, facecolor="#E5E7EB", edgecolor="white", linewidth=0.7, zorder=1))
+    if data_patches:
+        ax.add_collection(PatchCollection(data_patches, facecolor=data_colors, edgecolor="white", linewidth=0.8, zorder=2))
+    for name, x_coord, y_coord in label_points:
+        ax.text(x_coord, y_coord, name, fontsize=8, ha="center", va="center", color="#111827", zorder=3)
+    sm = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
+    sm.set_array([])
+    cbar = fig.colorbar(sm, ax=ax, fraction=0.032, pad=0.02)
+    cbar.set_label("CO²总量（Mt）")
+    ax.legend(handles=[Patch(facecolor="#E5E7EB", edgecolor="white", label="无数据或未纳入30省样本")], loc="lower left", frameon=True)
+    ax.set_title("2022年省级CO²排放总量空间分布")
+    ax.set_xlim(72, 136)
+    ax.set_ylim(17, 55)
+    ax.set_aspect("equal")
+    ax.axis("off")
+    save_fig(fig, FIG_DIR, "05_省级CO2总量空间分布热力图")
 
     topsis_sorted = topsis.sort_values("TOPSIS低碳得分", ascending=True)
     fig, ax = plt.subplots(figsize=(9, 8))
