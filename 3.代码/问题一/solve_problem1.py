@@ -197,22 +197,51 @@ def make_problem_one_figures(problem_one: dict[str, pd.DataFrame]) -> None:
     save_fig(fig, FIG_DIR, "01_省份CO2总量排名图")
 
     fig, ax = plt.subplots(figsize=(9, 6))
+    scatter_data = province.rename(columns={"CO2总量_Mt": "CO²总量（Mt）"})
     sns.scatterplot(
-        data=province,
+        data=scatter_data,
         x="人均CO2_吨每人",
         y="碳排放强度_吨每万元GDP",
         hue="类型",
-        size="CO2总量_Mt",
-        sizes=(60, 450),
+        size="CO²总量（Mt）",
+        sizes=(120, 900),
         alpha=0.8,
         ax=ax,
     )
-    for _, row in province.nlargest(6, "人均CO2_吨每人").iterrows():
-        ax.text(row["人均CO2_吨每人"], row["碳排放强度_吨每万元GDP"], row["省份"], fontsize=9)
+    label_offsets = {
+        "内蒙古": (-54, -2),
+        "宁夏": (18, 6),
+        "山西": (26, -4),
+        "新疆": (24, 8),
+        "河北": (30, -8),
+    }
+    label_data = province[province["类型"].eq("资源依赖高排放型")]
+    for _, row in label_data.iterrows():
+        offset = label_offsets.get(row["省份"], (18, 6))
+        ax.annotate(
+            row["省份"],
+            xy=(row["人均CO2_吨每人"], row["碳排放强度_吨每万元GDP"]),
+            xytext=offset,
+            textcoords="offset points",
+            ha="right" if offset[0] < 0 else "left",
+            va="center",
+            fontsize=9,
+            annotation_clip=False,
+        )
     ax.set_title("人均CO2与碳排放强度关系")
     ax.set_xlabel("人均CO2（吨/人）")
     ax.set_ylabel("碳排放强度（吨/万元GDP）")
-    ax.legend(loc="best", frameon=True)
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend_.remove()
+    size_header = "CO²总量（Mt）"
+    size_start = labels.index(size_header)
+    type_handles = handles[1:size_start]
+    type_labels = labels[1:size_start]
+    size_handles = handles[size_start + 1 :]
+    size_labels = labels[size_start + 1 :]
+    type_legend = ax.legend(type_handles, type_labels, title="类型", loc="upper left", frameon=True)
+    ax.add_artist(type_legend)
+    ax.legend(size_handles, size_labels, title=size_header, loc="lower right", frameon=True)
     save_fig(fig, FIG_DIR, "02_人均CO2与碳排放强度散点图")
 
     topsis_sorted = topsis.sort_values("TOPSIS低碳得分", ascending=True)
