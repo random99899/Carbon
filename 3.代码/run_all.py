@@ -15,10 +15,13 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+CODE_ROOT = Path(__file__).resolve().parent
+ROOT = CODE_ROOT.parent
+sys.pycache_prefix = str(ROOT / ".pycache")
+sys.path.append(str(CODE_ROOT))
+
 import numpy as np
 import pandas as pd
-
-sys.path.append(str(Path(__file__).resolve().parent))
 
 from common import (
     FIG_DIR,

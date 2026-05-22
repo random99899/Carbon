@@ -15,9 +15,13 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+CODE_ROOT = Path(__file__).resolve().parents[1]
+ROOT = CODE_ROOT.parent
+sys.pycache_prefix = str(ROOT / ".pycache")
+sys.path.append(str(CODE_ROOT))
+
 import pandas as pd
 
-sys.path.append(str(Path(__file__).resolve().parents[1]))
 from common import PROBLEM_RESULT_DIRS, read_data, setup_style
 from 问题一.solve_problem1 import run_problem_one
 from 问题二.solve_problem2 import run_problem_two

@@ -6,7 +6,7 @@
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-05-22T12:39:57.699893</dc:date>
+    <dc:date>2026-05-22T12:58:16.931756</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -42,7 +42,7 @@ z
      <g id="line2d_1">
       <path d="M 104.7 303.2925 
 L 104.7 22.7925 
-" clip-path="url(#p4d7ec8bd6f)" style="fill: none; stroke: #cccccc; stroke-linecap: round"/>
+" clip-path="url(#p3f2625c7b8)" style="fill: none; stroke: #cccccc; stroke-linecap: round"/>
      </g>
      <g id="text_1">
       <!-- 0.0 -->
@@ -86,7 +86,7 @@ z
      <g id="line2d_2">
       <path d="M 190.136656 303.2925 
 L 190.136656 22.7925 
-" clip-path="url(#p4d7ec8bd6f)" style="fill: none; stroke: #cccccc; stroke-linecap: round"/>
+" clip-path="url(#p3f2625c7b8)" style="fill: none; stroke: #cccccc; stroke-linecap: round"/>
      </g>
      <g id="text_2">
       <!-- 0.1 -->
@@ -115,7 +115,7 @@ z
      <g id="line2d_3">
       <path d="M 275.573311 303.2925 
 L 275.573311 22.7925 
-" clip-path="url(#p4d7ec8bd6f)" style="fill: none; stroke: #cccccc; stroke-linecap: round"/>
+" clip-path="url(#p3f2625c7b8)" style="fill: none; stroke: #cccccc; stroke-linecap: round"/>
      </g>
      <g id="text_3">
       <!-- 0.2 -->
@@ -158,7 +158,7 @@ z
      <g id="line2d_4">
       <path d="M 361.009967 303.2925 
 L 361.009967 22.7925 
-" clip-path="url(#p4d7ec8bd6f)" style="fill: none; stroke: #cccccc; stroke-linecap: round"/>
+" clip-path="url(#p3f2625c7b8)" style="fill: none; stroke: #cccccc; stroke-linecap: round"/>
      </g>
      <g id="text_4">
       <!-- 0.3 -->
@@ -200,7 +200,7 @@ z
      <g id="line2d_5">
       <path d="M 446.446622 303.2925 
 L 446.446622 22.7925 
-" clip-path="url(#p4d7ec8bd6f)" style="fill: none; stroke: #cccccc; stroke-linecap: round"/>
+" clip-path="url(#p3f2625c7b8)" style="fill: none; stroke: #cccccc; stroke-linecap: round"/>
      </g>
      <g id="text_5">
       <!-- 0.4 -->
@@ -238,7 +238,7 @@ z
      <g id="line2d_6">
       <path d="M 531.883278 303.2925 
 L 531.883278 22.7925 
-" clip-path="url(#p4d7ec8bd6f)" style="fill: none; stroke: #cccccc; stroke-linecap: round"/>
+" clip-path="url(#p3f2625c7b8)" style="fill: none; stroke: #cccccc; stroke-linecap: round"/>
      </g>
      <g id="text_6">
       <!-- 0.5 -->
@@ -574,7 +574,7 @@ z
      <g id="line2d_7">
       <path d="M 104.7 269.2925 
 L 557.44 269.2925 
-" clip-path="url(#p4d7ec8bd6f)" style="fill: none; stroke: #cccccc; stroke-linecap: round"/>
+" clip-path="url(#p3f2625c7b8)" style="fill: none; stroke: #cccccc; stroke-linecap: round"/>
      </g>
      <g id="text_8">
       <!-- 第二产业占比 -->
@@ -797,7 +797,7 @@ z
      <g id="line2d_8">
       <path d="M 104.7 216.1675 
 L 557.44 216.1675 
-" clip-path="url(#p4d7ec8bd6f)" style="fill: none; stroke: #cccccc; stroke-linecap: round"/>
+" clip-path="url(#p3f2625c7b8)" style="fill: none; stroke: #cccccc; stroke-linecap: round"/>
      </g>
      <g id="text_9">
       <!-- 城镇化率 -->
@@ -1046,7 +1046,7 @@ z
      <g id="line2d_9">
       <path d="M 104.7 163.0425 
 L 557.44 163.0425 
-" clip-path="url(#p4d7ec8bd6f)" style="fill: none; stroke: #cccccc; stroke-linecap: round"/>
+" clip-path="url(#p3f2625c7b8)" style="fill: none; stroke: #cccccc; stroke-linecap: round"/>
      </g>
      <g id="text_10">
       <!-- lnA -->
@@ -1107,7 +1107,7 @@ z
      <g id="line2d_10">
       <path d="M 104.7 109.9175 
 L 557.44 109.9175 
-" clip-path="url(#p4d7ec8bd6f)" style="fill: none; stroke: #cccccc; stroke-linecap: round"/>
+" clip-path="url(#p3f2625c7b8)" style="fill: none; stroke: #cccccc; stroke-linecap: round"/>
      </g>
      <g id="text_11">
       <!-- lnP -->
@@ -1144,7 +1144,7 @@ z
      <g id="line2d_11">
       <path d="M 104.7 56.7925 
 L 557.44 56.7925 
-" clip-path="url(#p4d7ec8bd6f)" style="fill: none; stroke: #cccccc; stroke-linecap: round"/>
+" clip-path="url(#p3f2625c7b8)" style="fill: none; stroke: #cccccc; stroke-linecap: round"/>
      </g>
      <g id="text_12">
       <!-- 煤炭相关排放占比 -->
@@ -1495,7 +1495,7 @@ L 140.016848 290.5425
 L 140.016848 248.0425 
 L 104.7 248.0425 
 z
-" clip-path="url(#p4d7ec8bd6f)" style="fill: #7896c1; stroke: #ffffff; stroke-linejoin: miter"/>
+" clip-path="url(#p3f2625c7b8)" style="fill: #7896c1; stroke: #ffffff; stroke-linejoin: miter"/>
    </g>
    <g id="patch_4">
     <path d="M 104.7 237.4175 
@@ -1503,7 +1503,7 @@ L 168.744848 237.4175
 L 168.744848 194.9175 
 L 104.7 194.9175 
 z
-" clip-path="url(#p4d7ec8bd6f)" style="fill: #bdc6d7; stroke: #ffffff; stroke-linejoin: miter"/>
+" clip-path="url(#p3f2625c7b8)" style="fill: #bdc6d7; stroke: #ffffff; stroke-linejoin: miter"/>
    </g>
    <g id="patch_5">
     <path d="M 104.7 184.2925 
@@ -1511,7 +1511,7 @@ L 243.926269 184.2925
 L 243.926269 141.7925 
 L 104.7 141.7925 
 z
-" clip-path="url(#p4d7ec8bd6f)" style="fill: #faf5f4; stroke: #ffffff; stroke-linejoin: miter"/>
+" clip-path="url(#p3f2625c7b8)" style="fill: #faf5f4; stroke: #ffffff; stroke-linejoin: miter"/>
    </g>
    <g id="patch_6">
     <path d="M 104.7 131.1675 
@@ -1519,7 +1519,7 @@ L 513.194787 131.1675
 L 513.194787 88.6675 
 L 104.7 88.6675 
 z
-" clip-path="url(#p4d7ec8bd6f)" style="fill: #e1b9b6; stroke: #ffffff; stroke-linejoin: miter"/>
+" clip-path="url(#p3f2625c7b8)" style="fill: #e1b9b6; stroke: #ffffff; stroke-linejoin: miter"/>
    </g>
    <g id="patch_7">
     <path d="M 104.7 78.0425 
@@ -1527,12 +1527,12 @@ L 535.880952 78.0425
 L 535.880952 35.5425 
 L 104.7 35.5425 
 z
-" clip-path="url(#p4d7ec8bd6f)" style="fill: #c67875; stroke: #ffffff; stroke-linejoin: miter"/>
+" clip-path="url(#p3f2625c7b8)" style="fill: #c67875; stroke: #ffffff; stroke-linejoin: miter"/>
    </g>
    <g id="line2d_12">
     <path d="M 104.7 303.2925 
 L 104.7 22.7925 
-" clip-path="url(#p4d7ec8bd6f)" style="fill: none; stroke: #333333; stroke-linecap: round"/>
+" clip-path="url(#p3f2625c7b8)" style="fill: none; stroke: #333333; stroke-linecap: round"/>
    </g>
    <g id="patch_8">
     <path d="M 104.7 303.2925 
@@ -1761,7 +1761,7 @@ z
   </g>
  </g>
  <defs>
-  <clipPath id="p4d7ec8bd6f">
+  <clipPath id="p3f2625c7b8">
    <rect x="104.7" y="22.7925" width="452.74" height="280.5"/>
   </clipPath>
  </defs>

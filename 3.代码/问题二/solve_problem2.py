@@ -18,6 +18,11 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+CODE_ROOT = Path(__file__).resolve().parents[1]
+ROOT = CODE_ROOT.parent
+sys.pycache_prefix = str(ROOT / ".pycache")
+sys.path.append(str(CODE_ROOT))
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -29,7 +34,6 @@ from sklearn.model_selection import LeaveOneOut, cross_val_predict
 from sklearn.preprocessing import StandardScaler
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
-sys.path.append(str(Path(__file__).resolve().parents[1]))
 from common import PROBLEM_FIG_DIRS, PROBLEM_RESULT_DIRS, read_data, save_fig, setup_style
 
 

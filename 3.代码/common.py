@@ -132,6 +132,7 @@ def write_gitignore() -> None:
     gitignore = ROOT / ".gitignore"
     desired = [
         ".venv/",
+        ".pycache/",
         "__pycache__/",
         "*.pyc",
         ".pytest_cache/",
