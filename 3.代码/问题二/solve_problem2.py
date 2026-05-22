@@ -140,8 +140,24 @@ def run_problem_two(province: pd.DataFrame) -> dict[str, pd.DataFrame]:
 
 def make_problem_two_figures(problem_two: dict[str, pd.DataFrame]) -> None:
     ridge_coef = problem_two["ridge_coef"].sort_values("标准化岭回归系数")
+    variable_labels = {
+        "lnP": "人口规模（lnP）",
+        "lnA": "经济发展水平（lnA）",
+        "煤炭相关排放占比": "煤炭相关排放占比",
+        "第二产业占比": "第二产业占比",
+        "城镇化率": "城镇化率",
+    }
+    variable_colors = {
+        "lnP": "#2563EB",
+        "lnA": "#059669",
+        "煤炭相关排放占比": "#DC2626",
+        "第二产业占比": "#D97706",
+        "城镇化率": "#7C3AED",
+    }
+    ridge_coef["变量说明"] = ridge_coef["变量"].map(variable_labels).fillna(ridge_coef["变量"])
+    bar_colors = ridge_coef["变量"].map(variable_colors).fillna("#4B5563")
     fig, ax = plt.subplots(figsize=(8, 5))
-    ax.barh(ridge_coef["变量"], ridge_coef["标准化岭回归系数"], color=sns.color_palette("vlag", len(ridge_coef)))
+    ax.barh(ridge_coef["变量说明"], ridge_coef["标准化岭回归系数"], color=bar_colors)
     ax.axvline(0, color="#333333", linewidth=1)
     ax.set_title("STIRPAT岭回归标准化系数")
     ax.set_xlabel("标准化系数")
