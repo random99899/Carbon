@@ -298,16 +298,42 @@ def make_problem_three_figures(problem_three: dict[str, pd.DataFrame]) -> None:
     peak = peak.sort_values("情景").reset_index(drop=True)
     peak["情景"] = peak["情景"].astype(str)
     fig, ax1 = plt.subplots(figsize=(8.5, 5.5))
-    sns.barplot(data=peak, x="情景", y="峰值_Mt", hue="情景", order=scenario_order, ax=ax1, palette="Set2", legend=False)
+    scenario_palette = {"基准情景": "#4C72B0", "低碳情景": "#DD8452", "强化低碳情景": "#55A868"}
+    sns.barplot(data=peak, x="情景", y="峰值_Mt", hue="情景", order=scenario_order, ax=ax1, palette=scenario_palette, legend=False)
+    for patch in ax1.patches:
+        current_width = patch.get_width()
+        new_width = current_width * 0.72
+        patch.set_x(patch.get_x() + (current_width - new_width) / 2)
+        patch.set_width(new_width)
     ax1.set_title("三情景峰值水平与2045减排潜力")
     ax1.set_ylabel("峰值排放（Mt）")
     ax1.set_xlabel("")
+    left_ticks = [10000, 10600, 11200, 11800, 12400, 13000]
+    right_ticks = [0, 9, 18, 27, 36, 45]
+    ax1.set_ylim(10000, 13000)
+    ax1.set_yticks(left_ticks)
+    ax1.grid(True, axis="y")
     ax2 = ax1.twinx()
-    ax2.plot(peak["情景"], peak["2045较峰值下降比例"] * 100, color="#C2410C", marker="o", linewidth=2.2)
+    line_color = "#4F46E5"
+    ax2.set_ylim(0, 45)
+    ax2.set_yticks(right_ticks)
+    ax2.grid(False)
+    ax2.plot(peak["情景"], peak["2045较峰值下降比例"] * 100, color=line_color, marker="o", linewidth=2.2)
     ax2.set_ylabel("2045较峰值下降比例（%）")
     for i, row in peak.reset_index().iterrows():
         ax1.text(i, row["峰值_Mt"], f'{row["达峰年份"]}', ha="center", va="bottom", fontsize=10)
-        ax2.text(i, row["2045较峰值下降比例"] * 100, f'{row["2045较峰值下降比例"]:.1%}', ha="center", va="bottom", color="#C2410C")
+        ratio = row["2045较峰值下降比例"] * 100
+        offset = 1.8 if i != 2 else -2.2
+        ax2.text(
+            i,
+            ratio + offset,
+            f'{row["2045较峰值下降比例"]:.1%}',
+            ha="center",
+            va="bottom" if offset > 0 else "top",
+            color="#312E81",
+            fontsize=10,
+            bbox={"boxstyle": "round,pad=0.2", "facecolor": "white", "edgecolor": "none", "alpha": 0.82},
+        )
     save_fig(fig, FIG_DIR, "08_三情景峰值与减排潜力对比图")
 
 
