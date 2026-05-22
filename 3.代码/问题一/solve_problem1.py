@@ -223,6 +223,10 @@ def make_problem_one_figures(problem_one: dict[str, pd.DataFrame]) -> None:
     ax.set_ylabel("")
     save_fig(fig, FIG_DIR, "03_TOPSIS低碳得分排名图")
 
+    old_radar = FIG_DIR / "04_聚类类型均值画像雷达图.png"
+    if old_radar.exists():
+        old_radar.unlink()
+
     profile = problem_one["cluster_profile"].copy()
     radar_cols = ["CO2总量_Mt", "人均CO2_吨每人", "碳排放强度_吨每万元GDP", "煤炭相关排放占比", "第二产业占比", "人均GDP_万元每人", "城镇化率_%"]
     scaled = profile.copy()
@@ -230,20 +234,37 @@ def make_problem_one_figures(problem_one: dict[str, pd.DataFrame]) -> None:
         mn, mx = cluster[col].min(), cluster[col].max()
         scaled[col] = (profile[col] - mn) / (mx - mn) if mx > mn else 0
     labels = ["总量", "人均", "强度", "煤炭", "二产", "人均GDP", "城镇化"]
-    angles = np.linspace(0, 2 * np.pi, len(labels), endpoint=False).tolist()
-    angles += angles[:1]
-    fig = plt.figure(figsize=(8, 7))
-    ax = fig.add_subplot(111, polar=True)
-    for _, row in scaled.iterrows():
-        values = [row[col] for col in radar_cols] + [row[radar_cols[0]]]
-        ax.plot(angles, values, linewidth=2, label=row["类型"])
-        ax.fill(angles, values, alpha=0.08)
-    ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(labels)
-    ax.set_yticklabels([])
-    ax.set_title("K-means聚类类型均值画像")
-    ax.legend(loc="upper right", bbox_to_anchor=(1.35, 1.10))
-    save_fig(fig, FIG_DIR, "04_聚类类型均值画像雷达图")
+    angles = np.linspace(0, 2 * np.pi, len(labels), endpoint=False)
+    polygon_angles = np.r_[angles, angles[0]]
+    palette = dict(zip(scaled["类型"], sns.color_palette("deep", n_colors=len(scaled))))
+
+    for idx, (_, row) in enumerate(scaled.iterrows(), start=1):
+        values = np.array([row[col] for col in radar_cols], dtype=float)
+        closed_values = np.r_[values, values[0]]
+        color = palette[row["类型"]]
+
+        fig = plt.figure(figsize=(7, 7))
+        ax = fig.add_subplot(111, polar=True)
+        ax.grid(False)
+        ax.spines["polar"].set_visible(False)
+        ax.set_ylim(0, 1)
+        ax.set_yticks([])
+        ax.set_theta_offset(np.pi / 2)
+        ax.set_theta_direction(-1)
+
+        # Draw polygon gridlines and radial spokes manually, replacing circular grids.
+        for radius in [0.2, 0.4, 0.6, 0.8, 1.0]:
+            ax.plot(polygon_angles, [radius] * len(polygon_angles), color="#D1D5DB", linewidth=1)
+        for angle in angles:
+            ax.plot([angle, angle], [0, 1], color="#D1D5DB", linewidth=1)
+
+        ax.plot(polygon_angles, closed_values, color=color, linewidth=2.6)
+        ax.fill(polygon_angles, closed_values, color=color, alpha=0.20)
+        ax.scatter(angles, values, color=color, s=42, zorder=3)
+        ax.set_xticks(angles)
+        ax.set_xticklabels(labels, fontsize=11)
+        ax.set_title(row["类型"], fontsize=17, pad=22)
+        save_fig(fig, FIG_DIR, f"04_{idx}_{row['类型']}_均值画像雷达图")
 
 
 def main() -> None:

@@ -290,7 +290,15 @@ def validate_outputs(problem_one: dict[str, pd.DataFrame], problem_two: dict[str
             if not path.exists() or path.stat().st_size == 0:
                 raise AssertionError(f"CSV结果未正确生成: {path}")
     expected_figs = {
-        "问题一": ["01_省份CO2总量排名图", "02_人均CO2与碳排放强度散点图", "03_TOPSIS低碳得分排名图", "04_聚类类型均值画像雷达图"],
+        "问题一": [
+            "01_省份CO2总量排名图",
+            "02_人均CO2与碳排放强度散点图",
+            "03_TOPSIS低碳得分排名图",
+            "04_1_资源依赖高排放型_均值画像雷达图",
+            "04_2_工业制造高排放型_均值画像雷达图",
+            "04_3_中等转型压力型_均值画像雷达图",
+            "04_4_经济发达效率型_均值画像雷达图",
+        ],
         "问题二": ["05_STIRPAT标准化系数图", "06_OLS拟合值与真实值对比图"],
         "问题三": ["07_三情景碳排放趋势图", "08_三情景峰值与减排潜力对比图"],
     }
