@@ -51,10 +51,10 @@ def write_policy_report(problem_one: dict[str, pd.DataFrame], problem_two: dict[
 
 def main() -> None:
     setup_style()
-    province, _, carbon = read_data()
+    province, national, carbon = read_data()
     problem_one = run_problem_one(province)
     problem_two = run_problem_two(province)
-    problem_three = run_problem_three(carbon)
+    problem_three = run_problem_three(carbon, national, province, problem_two)
     write_policy_report(problem_one, problem_two, problem_three)
     print(f"问题四报告已生成: {RESULT_DIR}")
 

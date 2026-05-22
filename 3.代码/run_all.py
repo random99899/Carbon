@@ -33,6 +33,7 @@ from common import (
     ensure_dirs,
     percent,
     read_data,
+    scenario_driver_assumptions,
     setup_style,
     write_gitignore,
 )
@@ -57,6 +58,8 @@ def write_summary_report(problem_one: dict[str, pd.DataFrame], problem_two: dict
     annual = problem_three["annual"].copy()
     sector_2024 = problem_three["sector_2024"].copy()
     peak = problem_three["peak"].copy()
+    stirpat_coeff = problem_three["stirpat_coeff"].copy()
+    driver_base = problem_three["driver_base"].copy()
 
     top_total = topsis.sort_values("CO2总量_Mt", ascending=False).head(8)[["省份", "CO2总量_Mt", "人均CO2_吨每人", "碳排放强度_吨每万元GDP"]]
     top_pc = topsis.sort_values("人均CO2_吨每人", ascending=False).head(5)[["省份", "人均CO2_吨每人", "碳排放强度_吨每万元GDP"]]
@@ -72,6 +75,20 @@ def write_summary_report(problem_one: dict[str, pd.DataFrame], problem_two: dict
     annual_visible = annual[["Year", "CO2 (Mt)", "记录天数", "是否完整年份"]]
     peak_visible = peak.copy()
     peak_visible["2045较峰值下降比例"] = peak_visible["2045较峰值下降比例"].map(percent)
+    assumptions = scenario_driver_assumptions()
+    scenario_param_summary = pd.DataFrame(
+        [
+            {
+                "情景": scenario,
+                "人口增长率": f"{values['人口增长率_起始']:.2%}→{values['人口增长率_末期']:.2%}",
+                "人均GDP增长率": f"{values['人均GDP增长率_起始']:.2%}→{values['人均GDP增长率_末期']:.2%}",
+                "煤炭占比年变化": f"{values['煤炭占比年变化_起始'] * 100:.2f}→{values['煤炭占比年变化_末期'] * 100:.2f}个百分点",
+                "第二产业占比年变化": f"{values['第二产业占比年变化_起始'] * 100:.2f}→{values['第二产业占比年变化_末期'] * 100:.2f}个百分点",
+                "城镇化率年变化": f"{values['城镇化率年变化_起始'] * 100:.2f}→{values['城镇化率年变化_末期'] * 100:.2f}个百分点",
+            }
+            for scenario, values in assumptions.items()
+        ]
+    )
 
     total_stats = spatial.loc["CO2总量_Mt"]
     pc_stats = spatial.loc["人均CO2_吨每人"]
@@ -143,9 +160,21 @@ OLS主要系数如下：
 
 > 题目要求：“基于最优预测模型，设定**基准、低碳、强化低碳**三种发展情景，预测2026—2045年全国碳排放总量与强度变化趋势。”
 
-解答：由于全国年度辅助变量样本较短，本文将STIRPAT驱动因素识别结果与Kaya恒等式结合，采用人口、人均GDP、能源强度、能源碳强度四类增长率进行情景递推。附件1年度排放核验如下，其中2025年为不完整年份：
+解答：由于全国年度样本较短，本文不直接建立全国多变量时间序列回归，而是采用问题二估计得到的STIRPAT系数进行相对递推。具体形式为：以2024年全国CO2排放为锚点，按`ΔlnC = β1ΔlnP + β2ΔlnA + β3ΔCoal + β4ΔIS + β5ΔU`计算下一年排放变化，其中P为人口规模，A为人均GDP，Coal为煤炭相关排放占比，IS为第二产业占比，U为城镇化率。附件1年度排放核验如下，其中2025年为不完整年份：
 
 {dataframe_to_markdown(annual_visible, ".2f")}
+
+用于问题三递推的STIRPAT系数如下：
+
+{dataframe_to_markdown(stirpat_coeff, ".4f")}
+
+全国驱动变量基准值如下：
+
+{dataframe_to_markdown(driver_base, ".4f")}
+
+三种情景参数设置如下。人口增长率和人均GDP增长率为年度相对增长率；煤炭占比、第二产业占比和城镇化率为年度占比变化量，单位为百分点。表中“起始→末期”表示2025年至2045年按线性插值逐年平滑变化：
+
+{dataframe_to_markdown(scenario_param_summary, ".4f")}
 
 2024年分部门排放显示，工业、电力和地面交通是主要排放来源：
 
@@ -157,19 +186,19 @@ OLS主要系数如下：
 
 {dataframe_to_markdown(peak_visible, ".3f")}
 
-基准情景下，全国排放在{int(base_peak['达峰年份'])}年达到峰值{base_peak['峰值_Mt']:.0f} Mt，之后缓慢下降，2045年为{base_peak['2045年_Mt']:.0f} Mt，较峰值下降{base_peak['2045较峰值下降比例']:.1%}。低碳情景下，排放自2024年后进入下降通道，2030年降至{low_peak['2030年_Mt']:.0f} Mt，2045年较峰值下降{low_peak['2045较峰值下降比例']:.1%}。强化低碳情景下降幅最大，2045年降至{strong_peak['2045年_Mt']:.0f} Mt，较峰值下降{strong_peak['2045较峰值下降比例']:.1%}。因此，能源强度下降和能源碳强度下降速度是决定能否低峰值达峰和中长期深度减排的关键。
+基准情景下，全国排放在{int(base_peak['达峰年份'])}年达到峰值{base_peak['峰值_Mt']:.0f} Mt，之后缓慢下降，2045年为{base_peak['2045年_Mt']:.0f} Mt，较峰值下降{base_peak['2045较峰值下降比例']:.1%}。低碳情景下，全国排放在{int(low_peak['达峰年份'])}年附近达峰，2030年为{low_peak['2030年_Mt']:.0f} Mt，2045年较峰值下降{low_peak['2045较峰值下降比例']:.1%}。强化低碳情景下降幅最大，2045年降至{strong_peak['2045年_Mt']:.0f} Mt，较峰值下降{strong_peak['2045较峰值下降比例']:.1%}。从碳排放强度看，2045年基准、低碳和强化低碳情景较2024年分别下降{base_peak['2045较2024强度下降比例']:.1%}、{low_peak['2045较2024强度下降比例']:.1%}和{strong_peak['2045较2024强度下降比例']:.1%}。因此，煤炭占比下降、产业结构优化和人口经济变量的共同变化，是决定达峰时点和中长期减排潜力的关键。
 
 ## 5. 问题四：政策建议
 
 > 题目要求：“结合问题一至三的研究结论，针对‘双碳’目标实现路径，从优化能源结构、推动产业升级、实施区域差异化减排、强化技术创新、完善政策机制等方面，提出科学可行、针对性强、可操作性高的政策建议。”
 
-解答：政策建议已单独写入`1.结果/问题四/问题四_政策建议报告.md`。核心建议是按省份类型实施差异化减排：资源依赖高排放型控煤并推动资源型产业转型，工业制造高排放型聚焦重点行业节能降碳，中等转型压力型强化产业准入和效率提升，经济发达效率型发挥绿色金融、技术创新和碳管理优势。全国层面应持续降低煤炭占比、扩大非化石能源供给、强化碳市场和技术创新，因为情景预测表明能源强度和能源碳强度下降越快，峰值越低、达峰后下降越明显。
+解答：政策建议已单独写入`1.结果/问题四/问题四_政策建议报告.md`。核心建议是按省份类型实施差异化减排：资源依赖高排放型控煤并推动资源型产业转型，工业制造高排放型聚焦重点行业节能降碳，中等转型压力型强化产业准入和效率提升，经济发达效率型发挥绿色金融、技术创新和碳管理优势。全国层面应持续降低煤炭占比、扩大非化石能源供给、强化碳市场和技术创新，因为STIRPAT情景递推结果表明，煤炭占比下降和产业结构优化越快，峰值越低、达峰后下降越明显。
 
 ## 6. 文件索引
 
 - 问题一结果：`1.结果/问题一/01_空间差异指标.csv`等6个CSV文件
 - 问题二结果：`1.结果/问题二/01_OLS系数.csv`等6个CSV文件
-- 问题三结果：`1.结果/问题三/01_全国年度排放.csv`等5个CSV文件
+- 问题三结果：`1.结果/问题三/01_全国年度排放.csv`等7个CSV文件
 - 问题四报告：`1.结果/问题四/问题四_政策建议报告.md`
 - 图片目录：`2.图片/问题一`、`2.图片/问题二`、`2.图片/问题三`
 - 代码目录：`3.代码/问题一`、`3.代码/问题二`、`3.代码/问题三`、`3.代码/问题四`
@@ -248,7 +277,7 @@ python -m venv .venv
 
 1. 问题一：变异系数、基尼系数、泰尔指数、熵权TOPSIS、K-means聚类。
 2. 问题二：STIRPAT横截面OLS、VIF共线性检验、岭回归留一交叉验证。
-3. 问题三：Kaya-STIRPAT三情景递推预测、达峰年份和减排潜力判断。
+3. 问题三：STIRPAT系数驱动的三情景递推预测、达峰年份和减排潜力判断。
 4. 问题四：根据分类、驱动因素和情景预测生成差异化政策建议。
 
 ## 输出说明
@@ -256,13 +285,13 @@ python -m venv .venv
 - `1.结果/汇总/B题结果汇总.md`：按题目原问题逐条引用并给出详细解答。
 - `1.结果/问题一/`：空间差异、TOPSIS和聚类CSV结果。
 - `1.结果/问题二/`：OLS、VIF、岭回归和拟合残差CSV结果。
-- `1.结果/问题三/`：年度排放、情景参数、预测序列和达峰结果。
+- `1.结果/问题三/`：年度排放、情景参数、STIRPAT递推系数、预测序列和达峰结果。
 - `1.结果/问题四/`：约500字政策建议报告。
 - `2.图片/`：按问题分文件夹保存PNG图片。
 
 ## 可复现性说明
 
-所有结果由`3.代码/run_all.py`从`数据/`目录重新计算得到。若需要调整情景参数，可修改`3.代码/common.py`中的`scenario_params()`后重新运行。
+所有结果由`3.代码/run_all.py`从`数据/`目录重新计算得到。若需要调整情景参数，可修改`3.代码/common.py`中的`scenario_driver_assumptions()`后重新运行。
 """
     (ROOT / "README.md").write_text(readme, encoding="utf-8")
 
@@ -282,7 +311,7 @@ def validate_outputs(problem_one: dict[str, pd.DataFrame], problem_two: dict[str
     expected_csvs = {
         "问题一": ["01_空间差异指标", "02_熵权指标权重", "03_TOPSIS得分排名", "04_聚类K值检验", "05_K4聚类结果", "06_类型均值画像"],
         "问题二": ["01_OLS系数", "02_拟合优度", "03_VIF共线性检验", "04_拟合值残差", "05_岭回归交叉验证", "06_岭回归标准化系数"],
-        "问题三": ["01_全国年度排放", "02_2024部门排放", "03_情景参数", "04_2024-2045预测序列", "05_达峰与减排潜力"],
+        "问题三": ["01_全国年度排放", "02_2024部门排放", "03_情景参数", "04_2024-2045预测序列", "05_达峰与减排潜力", "06_STIRPAT递推系数", "07_驱动变量基准值"],
     }
     for problem, stems in expected_csvs.items():
         for stem in stems:
@@ -312,10 +341,10 @@ def validate_outputs(problem_one: dict[str, pd.DataFrame], problem_two: dict[str
 def main() -> None:
     ensure_dirs()
     setup_style()
-    province, _, carbon = read_data()
+    province, national, carbon = read_data()
     problem_one = run_problem_one(province)
     problem_two = run_problem_two(province)
-    problem_three = run_problem_three(carbon)
+    problem_three = run_problem_three(carbon, national, province, problem_two)
     make_problem_one_figures(problem_one)
     make_problem_two_figures(problem_two)
     make_problem_three_figures(problem_three)
