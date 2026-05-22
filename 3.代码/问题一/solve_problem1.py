@@ -10,7 +10,7 @@ from __future__ import annotations
 
 使用数据：
 - 输入：数据/2022省级综合表.xlsx，工作表“主表”。
-- 输出：1.结果/问题一/问题一_空间差异_TOPSIS_聚类结果.xlsx。
+- 输出：1.结果/问题一/ 下多个CSV结果文件。
 - 输出图片：2.图片/问题一/01至04号图。
 """
 
@@ -30,7 +30,7 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import StandardScaler
 
-from common import PROBLEM_FIG_DIRS, PROBLEM_RESULT_DIRS, gini, read_data, require_columns, save_fig, setup_style, theil
+from common import PROBLEM_FIG_DIRS, PROBLEM_RESULT_DIRS, gini, read_data, require_columns, save_fig, setup_style, theil, write_csv
 
 
 PROBLEM = "问题一"
@@ -166,13 +166,12 @@ def run_problem_one(province: pd.DataFrame) -> dict[str, pd.DataFrame]:
     )
 
     RESULT_DIR.mkdir(parents=True, exist_ok=True)
-    with pd.ExcelWriter(RESULT_DIR / "问题一_空间差异_TOPSIS_聚类结果.xlsx", engine="openpyxl") as writer:
-        spatial_stats_df.to_excel(writer, sheet_name="空间差异指标", index=False)
-        weights_df.to_excel(writer, sheet_name="熵权", index=False)
-        topsis_df.to_excel(writer, sheet_name="TOPSIS得分排名", index=False)
-        silhouette_df.to_excel(writer, sheet_name="聚类K值检验", index=False)
-        cluster_df.sort_values(["类型", "省份"]).to_excel(writer, sheet_name="K4聚类结果", index=False)
-        cluster_profile.to_excel(writer, sheet_name="类型均值画像", index=False)
+    write_csv(spatial_stats_df, RESULT_DIR / "01_空间差异指标.csv")
+    write_csv(weights_df, RESULT_DIR / "02_熵权指标权重.csv")
+    write_csv(topsis_df, RESULT_DIR / "03_TOPSIS得分排名.csv")
+    write_csv(silhouette_df, RESULT_DIR / "04_聚类K值检验.csv")
+    write_csv(cluster_df.sort_values(["类型", "省份"]), RESULT_DIR / "05_K4聚类结果.csv")
+    write_csv(cluster_profile, RESULT_DIR / "06_类型均值画像.csv")
 
     return {
         "spatial_stats": spatial_stats_df,

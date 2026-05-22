@@ -10,7 +10,7 @@ from __future__ import annotations
 
 使用数据：
 - 输入：数据/附件1：2019—2025 年全国碳排放数据.csv。
-- 输出：1.结果/问题三/问题三_三情景预测与达峰结果.xlsx。
+- 输出：1.结果/问题三/ 下多个CSV结果文件。
 - 输出图片：2.图片/问题三/07_三情景碳排放趋势图、08_三情景峰值与减排潜力对比图。
 """
 
@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-from common import PROBLEM_FIG_DIRS, PROBLEM_RESULT_DIRS, read_data, save_fig, scenario_params, setup_style
+from common import PROBLEM_FIG_DIRS, PROBLEM_RESULT_DIRS, read_data, save_fig, scenario_params, setup_style, write_csv
 
 
 PROBLEM = "问题三"
@@ -86,12 +86,11 @@ def run_problem_three(carbon: pd.DataFrame) -> dict[str, pd.DataFrame]:
     )
 
     RESULT_DIR.mkdir(parents=True, exist_ok=True)
-    with pd.ExcelWriter(RESULT_DIR / "问题三_三情景预测与达峰结果.xlsx", engine="openpyxl") as writer:
-        annual.to_excel(writer, sheet_name="全国年度排放", index=False)
-        sector_2024.to_excel(writer, sheet_name="2024部门排放", index=False)
-        params_df.to_excel(writer, sheet_name="情景参数", index=False)
-        forecast_df.to_excel(writer, sheet_name="2024-2045预测序列", index=False)
-        peak_df.to_excel(writer, sheet_name="达峰与减排潜力", index=False)
+    write_csv(annual, RESULT_DIR / "01_全国年度排放.csv")
+    write_csv(sector_2024, RESULT_DIR / "02_2024部门排放.csv")
+    write_csv(params_df, RESULT_DIR / "03_情景参数.csv")
+    write_csv(forecast_df, RESULT_DIR / "04_2024-2045预测序列.csv")
+    write_csv(peak_df, RESULT_DIR / "05_达峰与减排潜力.csv")
 
     return {"annual": annual, "sector_2024": sector_2024, "params": params_df, "forecast": forecast_df, "peak": peak_df}
 

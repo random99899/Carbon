@@ -11,7 +11,7 @@ from __future__ import annotations
 
 使用数据：
 - 输入：数据/2022省级综合表.xlsx，工作表“主表”。
-- 输出：1.结果/问题二/问题二_STIRPAT_回归与检验结果.xlsx。
+- 输出：1.结果/问题二/ 下多个CSV结果文件。
 - 输出图片：2.图片/问题二/05_STIRPAT标准化系数图、06_OLS拟合值与真实值对比图。
 """
 
@@ -34,7 +34,7 @@ from sklearn.model_selection import LeaveOneOut, cross_val_predict
 from sklearn.preprocessing import StandardScaler
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
-from common import PROBLEM_FIG_DIRS, PROBLEM_RESULT_DIRS, read_data, save_fig, setup_style
+from common import PROBLEM_FIG_DIRS, PROBLEM_RESULT_DIRS, read_data, save_fig, setup_style, write_csv
 
 
 PROBLEM = "问题二"
@@ -121,13 +121,12 @@ def run_problem_two(province: pd.DataFrame) -> dict[str, pd.DataFrame]:
     )
 
     RESULT_DIR.mkdir(parents=True, exist_ok=True)
-    with pd.ExcelWriter(RESULT_DIR / "问题二_STIRPAT_回归与检验结果.xlsx", engine="openpyxl") as writer:
-        ols_df.to_excel(writer, sheet_name="OLS系数", index=False)
-        fit_df.to_excel(writer, sheet_name="拟合优度", index=False)
-        vif_df.to_excel(writer, sheet_name="VIF共线性检验", index=False)
-        fitted_df.to_excel(writer, sheet_name="拟合值残差", index=False)
-        ridge_metrics_df.to_excel(writer, sheet_name="岭回归交叉验证", index=False)
-        ridge_coef_df.to_excel(writer, sheet_name="岭回归标准化系数", index=False)
+    write_csv(ols_df, RESULT_DIR / "01_OLS系数.csv")
+    write_csv(fit_df, RESULT_DIR / "02_拟合优度.csv")
+    write_csv(vif_df, RESULT_DIR / "03_VIF共线性检验.csv")
+    write_csv(fitted_df, RESULT_DIR / "04_拟合值残差.csv")
+    write_csv(ridge_metrics_df, RESULT_DIR / "05_岭回归交叉验证.csv")
+    write_csv(ridge_coef_df, RESULT_DIR / "06_岭回归标准化系数.csv")
 
     return {
         "ols_coef": ols_df,

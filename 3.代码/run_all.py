@@ -167,9 +167,9 @@ OLS主要系数如下：
 
 ## 6. 文件索引
 
-- 问题一结果：`1.结果/问题一/问题一_空间差异_TOPSIS_聚类结果.xlsx`
-- 问题二结果：`1.结果/问题二/问题二_STIRPAT_回归与检验结果.xlsx`
-- 问题三结果：`1.结果/问题三/问题三_三情景预测与达峰结果.xlsx`
+- 问题一结果：`1.结果/问题一/01_空间差异指标.csv`等6个CSV文件
+- 问题二结果：`1.结果/问题二/01_OLS系数.csv`等6个CSV文件
+- 问题三结果：`1.结果/问题三/01_全国年度排放.csv`等5个CSV文件
 - 问题四报告：`1.结果/问题四/问题四_政策建议报告.md`
 - 图片目录：`2.图片/问题一`、`2.图片/问题二`、`2.图片/问题三`
 - 代码目录：`3.代码/问题一`、`3.代码/问题二`、`3.代码/问题三`、`3.代码/问题四`
@@ -254,8 +254,8 @@ python -m venv .venv
 ## 输出说明
 
 - `1.结果/汇总/B题结果汇总.md`：按题目原问题逐条引用并给出详细解答。
-- `1.结果/问题一/`：空间差异、TOPSIS和聚类Excel结果。
-- `1.结果/问题二/`：OLS、VIF、岭回归和拟合残差Excel结果。
+- `1.结果/问题一/`：空间差异、TOPSIS和聚类CSV结果。
+- `1.结果/问题二/`：OLS、VIF、岭回归和拟合残差CSV结果。
 - `1.结果/问题三/`：年度排放、情景参数、预测序列和达峰结果。
 - `1.结果/问题四/`：约500字政策建议报告。
 - `2.图片/`：按问题分文件夹保存PNG图片。
@@ -279,6 +279,16 @@ def validate_outputs(problem_one: dict[str, pd.DataFrame], problem_two: dict[str
     for scenario, group in forecast.groupby("情景"):
         if not set(range(2026, 2046)).issubset(set(group["年份"])):
             raise AssertionError(f"{scenario}未覆盖2026-2045完整预测区间。")
+    expected_csvs = {
+        "问题一": ["01_空间差异指标", "02_熵权指标权重", "03_TOPSIS得分排名", "04_聚类K值检验", "05_K4聚类结果", "06_类型均值画像"],
+        "问题二": ["01_OLS系数", "02_拟合优度", "03_VIF共线性检验", "04_拟合值残差", "05_岭回归交叉验证", "06_岭回归标准化系数"],
+        "问题三": ["01_全国年度排放", "02_2024部门排放", "03_情景参数", "04_2024-2045预测序列", "05_达峰与减排潜力"],
+    }
+    for problem, stems in expected_csvs.items():
+        for stem in stems:
+            path = PROBLEM_RESULT_DIRS[problem] / f"{stem}.csv"
+            if not path.exists() or path.stat().st_size == 0:
+                raise AssertionError(f"CSV结果未正确生成: {path}")
     expected_figs = {
         "问题一": ["01_省份CO2总量排名图", "02_人均CO2与碳排放强度散点图", "03_TOPSIS低碳得分排名图", "04_聚类类型均值画像雷达图"],
         "问题二": ["05_STIRPAT标准化系数图", "06_OLS拟合值与真实值对比图"],

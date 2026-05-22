@@ -127,6 +127,11 @@ def dataframe_to_markdown(df: pd.DataFrame, floatfmt: str = ".3f") -> str:
     return "\n".join(lines)
 
 
+def write_csv(df: pd.DataFrame, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(path, index=False, encoding="utf-8-sig")
+
+
 def write_gitignore() -> None:
     gitignore = ROOT / ".gitignore"
     desired = [
