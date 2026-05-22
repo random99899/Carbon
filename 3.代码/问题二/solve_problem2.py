@@ -24,6 +24,7 @@ sys.pycache_prefix = str(ROOT / ".pycache")
 sys.path.append(str(CODE_ROOT))
 
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -166,48 +167,56 @@ def make_problem_two_figures(problem_two: dict[str, pd.DataFrame]) -> None:
 
     fitted = problem_two["fitted"].copy()
     fitted["误差_Mt"] = fitted["拟合CO2_Mt"] - fitted["实际CO2_Mt"]
-    top_labels = fitted.nlargest(8, "绝对误差_Mt")
     lim_min = min(fitted["实际CO2_Mt"].min(), fitted["拟合CO2_Mt"].min()) * 0.88
     lim_max = max(fitted["实际CO2_Mt"].max(), fitted["拟合CO2_Mt"].max()) * 1.08
+    plot_data = fitted.rename(
+        columns={
+            "实际CO2_Mt": "实际CO²排放量（Mt）",
+            "拟合CO2_Mt": "拟合CO²排放量（Mt）",
+            "绝对误差_Mt": "绝对误差（Mt）",
+        }
+    )
+    plot_data["误差方向"] = plot_data["误差方向"].map({"模型高估": "高估", "模型低估": "低估"}).fillna(plot_data["误差方向"])
+    error_palette = {"高估": "#C2410C", "低估": "#2563EB"}
 
     fig, ax = plt.subplots(figsize=(8.5, 7))
     sns.scatterplot(
-        data=fitted,
-        x="实际CO2_Mt",
-        y="拟合CO2_Mt",
+        data=plot_data,
+        x="实际CO²排放量（Mt）",
+        y="拟合CO²排放量（Mt）",
         hue="误差方向",
-        size="绝对误差_Mt",
+        size="绝对误差（Mt）",
         sizes=(50, 280),
-        palette={"模型高估": "#C2410C", "模型低估": "#2563EB"},
+        palette=error_palette,
         alpha=0.82,
+        legend=False,
         ax=ax,
     )
-    ax.plot([lim_min, lim_max], [lim_min, lim_max], "--", color="#333333", linewidth=1.5, label="完全拟合线：拟合值=实际值")
-    for _, row in top_labels.iterrows():
-        ax.annotate(
-            row["省份"],
-            xy=(row["实际CO2_Mt"], row["拟合CO2_Mt"]),
-            xytext=(6, 6),
-            textcoords="offset points",
-            fontsize=9,
-        )
-        ax.vlines(row["实际CO2_Mt"], row["实际CO2_Mt"], row["拟合CO2_Mt"], color="#777777", alpha=0.35, linewidth=1)
-    ax.text(
-        0.03,
-        0.97,
-        "点：省份；横轴：实际CO2；纵轴：STIRPAT拟合CO2\n黑色虚线：完全拟合线；点在虚线上方表示模型高估\n灰色竖线：该省拟合误差大小；点越大误差越大",
-        transform=ax.transAxes,
-        va="top",
-        ha="left",
-        fontsize=10,
-        bbox={"boxstyle": "round,pad=0.35", "facecolor": "white", "edgecolor": "#BBBBBB", "alpha": 0.88},
+    ax.plot([lim_min, lim_max], [lim_min, lim_max], "--", color="#333333", linewidth=1.5)
+    direction_handles = [
+        Line2D([0], [0], marker="o", linestyle="", color=color, label=label, markersize=8, alpha=0.82)
+        for label, color in error_palette.items()
+    ]
+    direction_legend = ax.legend(direction_handles, ["高估", "低估"], title="误差方向", loc="upper left", frameon=True)
+    ax.add_artist(direction_legend)
+    size_values = [150, 300, 450, 600]
+    size_handles = [
+        Line2D([0], [0], marker="o", linestyle="", color="#595959", label=str(value), markersize=np.sqrt(value / 600) * 16)
+        for value in size_values
+    ]
+    line_handle = Line2D([0], [0], linestyle="--", color="#333333", linewidth=1.5, label="完全拟合线")
+    ax.legend(
+        size_handles + [line_handle],
+        [str(value) for value in size_values] + ["完全拟合线"],
+        title="绝对误差（Mt）",
+        loc="lower right",
+        frameon=True,
     )
     ax.set_xlim(lim_min, lim_max)
     ax.set_ylim(lim_min, lim_max)
     ax.set_title("STIRPAT模型实际值与拟合值对比及误差说明")
-    ax.set_xlabel("实际CO2排放量（Mt）")
-    ax.set_ylabel("模型拟合CO2排放量（Mt）")
-    ax.legend(loc="lower right", frameon=True)
+    ax.set_xlabel("实际CO²排放量（Mt）")
+    ax.set_ylabel("模型拟合CO²排放量（Mt）")
     save_fig(fig, FIG_DIR, "06_OLS拟合值与真实值对比图")
 
 
