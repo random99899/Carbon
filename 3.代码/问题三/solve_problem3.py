@@ -83,36 +83,15 @@ def _prepare_national_base(national: pd.DataFrame, province: pd.DataFrame, base_
     return base_values, base_table
 
 
-def run_problem_three(
-    carbon: pd.DataFrame,
-    national: pd.DataFrame,
-    province: pd.DataFrame,
-    problem_two: dict[str, pd.DataFrame] | None = None,
-) -> dict[str, pd.DataFrame]:
-    total = carbon[carbon["Sector"].eq("Total")].copy()
-    annual = total.groupby("Year", as_index=False)["CO2 (Mt)"].sum()
-    days = total.groupby("Year")["Date"].nunique().reset_index(name="记录天数")
-    annual = annual.merge(days, on="Year", how="left")
-    annual["是否完整年份"] = annual["记录天数"] >= 365
-    base_year = 2024
-    if base_year not in annual["Year"].values:
-        raise ValueError("附件1缺少2024年Sector=Total数据，无法确定预测基准。")
-    base_emission = float(annual.loc[annual["Year"].eq(base_year), "CO2 (Mt)"].iloc[0])
-    base_values, base_table = _prepare_national_base(national, province, base_year)
-    if problem_two is None:
-        problem_two = run_problem_two(province)
-    coeff = problem_two["ols_coef"].set_index("变量")["系数"].to_dict()
-    required = ["lnP", "lnA", "煤炭相关排放占比", "第二产业占比", "城镇化率"]
-    missing = [name for name in required if name not in coeff]
-    if missing:
-        raise ValueError(f"问题二OLS系数缺少变量: {missing}")
-
+def _simulate_forecast(
+    base_emission: float,
+    base_values: dict[str, float],
+    coeff: dict[str, float],
+    assumptions: dict[str, dict[str, float]],
+    base_year: int = 2024,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     rows = []
     param_rows = []
-    coeff_rows = pd.DataFrame(
-        [{"变量": key, "STIRPAT_OLS系数": coeff[key], "预测中含义": "驱动变量变化对ln(CO2)的边际影响"} for key in required]
-    )
-    assumptions = scenario_driver_assumptions()
     for scenario, params in assumptions.items():
         emission = base_emission
         population = base_values["人口_万人"]
@@ -196,8 +175,10 @@ def run_problem_three(
                     "STIRPAT对数增长项": log_growth,
                 }
             )
+    return pd.DataFrame(rows), pd.DataFrame(param_rows)
 
-    forecast_df = pd.DataFrame(rows)
+
+def _summarize_peak(forecast_df: pd.DataFrame, scenario_order: list[str], base_year: int = 2024) -> pd.DataFrame:
     peak_rows = []
     for scenario, group in forecast_df.groupby("情景"):
         group = group.sort_values("年份")
@@ -220,12 +201,140 @@ def run_problem_three(
                 "2045较2024强度下降比例": 1 - intensity_2045 / base_intensity,
             }
         )
-    scenario_order = list(assumptions.keys())
     peak_df = pd.DataFrame(peak_rows)
     peak_df["情景"] = pd.Categorical(peak_df["情景"], categories=scenario_order, ordered=True)
     peak_df = peak_df.sort_values("情景").reset_index(drop=True)
     peak_df["情景"] = peak_df["情景"].astype(str)
-    params_df = pd.DataFrame(param_rows)
+    return peak_df
+
+
+def _copy_assumptions(assumptions: dict[str, dict[str, float]]) -> dict[str, dict[str, float]]:
+    return {scenario: values.copy() for scenario, values in assumptions.items()}
+
+
+def _single_factor_sensitivity(
+    base_emission: float,
+    base_values: dict[str, float],
+    coeff: dict[str, float],
+    assumptions: dict[str, dict[str, float]],
+    baseline_peak: pd.DataFrame,
+) -> pd.DataFrame:
+    variable_keys = {
+        "人口增长率": ["人口增长率_起始", "人口增长率_末期"],
+        "人均GDP增长率": ["人均GDP增长率_起始", "人均GDP增长率_末期"],
+        "煤炭占比下降速度": ["煤炭占比年变化_起始", "煤炭占比年变化_末期"],
+        "第二产业占比下降速度": ["第二产业占比年变化_起始", "第二产业占比年变化_末期"],
+        "城镇化率年变化": ["城镇化率年变化_起始", "城镇化率年变化_末期"],
+    }
+    perturbations = [-0.20, -0.10, 0.10, 0.20]
+    baseline = baseline_peak.set_index("情景")
+    rows = []
+    scenario_order = list(assumptions.keys())
+    for scenario in scenario_order:
+        for variable, keys in variable_keys.items():
+            for perturbation in perturbations:
+                perturbed = _copy_assumptions(assumptions)
+                for key in keys:
+                    perturbed[scenario][key] *= 1 + perturbation
+                forecast_df, _ = _simulate_forecast(base_emission, base_values, coeff, perturbed)
+                peak = _summarize_peak(forecast_df, scenario_order)
+                result = peak.set_index("情景").loc[scenario]
+                base = baseline.loc[scenario]
+                rows.append(
+                    {
+                        "情景": scenario,
+                        "扰动变量": variable,
+                        "扰动比例": perturbation,
+                        "达峰年份": result["达峰年份"],
+                        "达峰年份变化": result["达峰年份"] - base["达峰年份"],
+                        "峰值_Mt": result["峰值_Mt"],
+                        "峰值变化_Mt": result["峰值_Mt"] - base["峰值_Mt"],
+                        "2045年_Mt": result["2045年_Mt"],
+                        "2045变化_Mt": result["2045年_Mt"] - base["2045年_Mt"],
+                        "2045较峰值下降比例": result["2045较峰值下降比例"],
+                    }
+                )
+    return pd.DataFrame(rows)
+
+
+def _coefficient_sensitivity(
+    base_emission: float,
+    base_values: dict[str, float],
+    coeff: dict[str, float],
+    assumptions: dict[str, dict[str, float]],
+    baseline_peak: pd.DataFrame,
+) -> pd.DataFrame:
+    variable_labels = {
+        "lnP": "人口规模系数",
+        "lnA": "人均GDP系数",
+        "煤炭相关排放占比": "煤炭占比系数",
+        "第二产业占比": "第二产业占比系数",
+        "城镇化率": "城镇化率系数",
+    }
+    perturbations = [-0.10, 0.10]
+    baseline = baseline_peak.set_index("情景")
+    rows = []
+    scenario_order = list(assumptions.keys())
+    for coeff_name, label in variable_labels.items():
+        for perturbation in perturbations:
+            perturbed_coeff = coeff.copy()
+            perturbed_coeff[coeff_name] *= 1 + perturbation
+            forecast_df, _ = _simulate_forecast(base_emission, base_values, perturbed_coeff, assumptions)
+            peak = _summarize_peak(forecast_df, scenario_order)
+            for scenario in scenario_order:
+                result = peak.set_index("情景").loc[scenario]
+                base = baseline.loc[scenario]
+                rows.append(
+                    {
+                        "情景": scenario,
+                        "扰动系数": coeff_name,
+                        "系数说明": label,
+                        "扰动比例": perturbation,
+                        "达峰年份": result["达峰年份"],
+                        "达峰年份变化": result["达峰年份"] - base["达峰年份"],
+                        "峰值_Mt": result["峰值_Mt"],
+                        "峰值变化_Mt": result["峰值_Mt"] - base["峰值_Mt"],
+                        "2045年_Mt": result["2045年_Mt"],
+                        "2045变化_Mt": result["2045年_Mt"] - base["2045年_Mt"],
+                        "2045较峰值下降比例": result["2045较峰值下降比例"],
+                    }
+                )
+    return pd.DataFrame(rows)
+
+
+def run_problem_three(
+    carbon: pd.DataFrame,
+    national: pd.DataFrame,
+    province: pd.DataFrame,
+    problem_two: dict[str, pd.DataFrame] | None = None,
+) -> dict[str, pd.DataFrame]:
+    total = carbon[carbon["Sector"].eq("Total")].copy()
+    annual = total.groupby("Year", as_index=False)["CO2 (Mt)"].sum()
+    days = total.groupby("Year")["Date"].nunique().reset_index(name="记录天数")
+    annual = annual.merge(days, on="Year", how="left")
+    annual["是否完整年份"] = annual["记录天数"] >= 365
+    base_year = 2024
+    if base_year not in annual["Year"].values:
+        raise ValueError("附件1缺少2024年Sector=Total数据，无法确定预测基准。")
+    base_emission = float(annual.loc[annual["Year"].eq(base_year), "CO2 (Mt)"].iloc[0])
+    base_values, base_table = _prepare_national_base(national, province, base_year)
+    if problem_two is None:
+        problem_two = run_problem_two(province)
+    coeff = problem_two["ols_coef"].set_index("变量")["系数"].to_dict()
+    required = ["lnP", "lnA", "煤炭相关排放占比", "第二产业占比", "城镇化率"]
+    missing = [name for name in required if name not in coeff]
+    if missing:
+        raise ValueError(f"问题二OLS系数缺少变量: {missing}")
+
+    coeff_rows = pd.DataFrame(
+        [{"变量": key, "STIRPAT_OLS系数": coeff[key], "预测中含义": "驱动变量变化对ln(CO2)的边际影响"} for key in required]
+    )
+    assumptions = scenario_driver_assumptions()
+    scenario_order = list(assumptions.keys())
+    forecast_df, params_df = _simulate_forecast(base_emission, base_values, coeff, assumptions, base_year)
+    peak_df = _summarize_peak(forecast_df, scenario_order, base_year)
+    single_factor_sensitivity = _single_factor_sensitivity(base_emission, base_values, coeff, assumptions, peak_df)
+    coefficient_sensitivity = _coefficient_sensitivity(base_emission, base_values, coeff, assumptions, peak_df)
     sector_2024 = (
         carbon[(carbon["Year"].eq(2024)) & (~carbon["Sector"].eq("Total"))]
         .groupby("Sector", as_index=False)["CO2 (Mt)"]
@@ -241,6 +350,8 @@ def run_problem_three(
     write_csv(peak_df, RESULT_DIR / "05_达峰与减排潜力.csv")
     write_csv(coeff_rows, RESULT_DIR / "06_STIRPAT递推系数.csv")
     write_csv(base_table, RESULT_DIR / "07_驱动变量基准值.csv")
+    write_csv(single_factor_sensitivity, RESULT_DIR / "08_单因素灵敏度分析.csv")
+    write_csv(coefficient_sensitivity, RESULT_DIR / "09_STIRPAT系数灵敏度分析.csv")
 
     return {
         "annual": annual,
@@ -250,6 +361,8 @@ def run_problem_three(
         "peak": peak_df,
         "stirpat_coeff": coeff_rows,
         "driver_base": base_table,
+        "single_factor_sensitivity": single_factor_sensitivity,
+        "coefficient_sensitivity": coefficient_sensitivity,
     }
 
 
@@ -335,6 +448,58 @@ def make_problem_three_figures(problem_three: dict[str, pd.DataFrame]) -> None:
             bbox={"boxstyle": "round,pad=0.2", "facecolor": "white", "edgecolor": "none", "alpha": 0.82},
         )
     save_fig(fig, FIG_DIR, "08_三情景峰值与减排潜力对比图")
+
+    single = problem_three["single_factor_sensitivity"].copy()
+    single_plot = single[(single["情景"].eq("基准情景")) & (single["扰动比例"].isin([-0.20, 0.20]))].copy()
+    single_plot["扰动方向"] = single_plot["扰动比例"].map({-0.20: "-20%", 0.20: "+20%"})
+    order = (
+        single_plot.groupby("扰动变量")["2045变化_Mt"]
+        .apply(lambda s: s.abs().max())
+        .sort_values(ascending=True)
+        .index.tolist()
+    )
+    fig, ax = plt.subplots(figsize=(8.8, 5.4))
+    sns.barplot(
+        data=single_plot,
+        y="扰动变量",
+        x="2045变化_Mt",
+        hue="扰动方向",
+        order=order,
+        palette={"-20%": "#60A5FA", "+20%": "#F97316"},
+        ax=ax,
+    )
+    ax.axvline(0, color="#333333", linewidth=1)
+    ax.set_title("单因素灵敏度：基准情景2045排放影响")
+    ax.set_xlabel("2045年CO²排放变化量（Mt）")
+    ax.set_ylabel("")
+    ax.legend(title="扰动比例", frameon=True)
+    save_fig(fig, FIG_DIR, "09_单因素灵敏度_2045排放影响图")
+
+    coef = problem_three["coefficient_sensitivity"].copy()
+    coef_plot = coef[(coef["情景"].eq("基准情景")) & (coef["扰动比例"].isin([-0.10, 0.10]))].copy()
+    coef_plot["扰动方向"] = coef_plot["扰动比例"].map({-0.10: "-10%", 0.10: "+10%"})
+    order = (
+        coef_plot.groupby("系数说明")["2045变化_Mt"]
+        .apply(lambda s: s.abs().max())
+        .sort_values(ascending=True)
+        .index.tolist()
+    )
+    fig, ax = plt.subplots(figsize=(8.8, 5.4))
+    sns.barplot(
+        data=coef_plot,
+        y="系数说明",
+        x="2045变化_Mt",
+        hue="扰动方向",
+        order=order,
+        palette={"-10%": "#93C5FD", "+10%": "#8B5CF6"},
+        ax=ax,
+    )
+    ax.axvline(0, color="#333333", linewidth=1)
+    ax.set_title("STIRPAT系数灵敏度：基准情景2045排放影响")
+    ax.set_xlabel("2045年CO²排放变化量（Mt）")
+    ax.set_ylabel("")
+    ax.legend(title="扰动比例", frameon=True)
+    save_fig(fig, FIG_DIR, "10_STIRPAT系数灵敏度_2045排放影响图")
 
 
 def main() -> None:

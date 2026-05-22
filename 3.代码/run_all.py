@@ -60,6 +60,8 @@ def write_summary_report(problem_one: dict[str, pd.DataFrame], problem_two: dict
     peak = problem_three["peak"].copy()
     stirpat_coeff = problem_three["stirpat_coeff"].copy()
     driver_base = problem_three["driver_base"].copy()
+    single_sensitivity = problem_three["single_factor_sensitivity"].copy()
+    coefficient_sensitivity = problem_three["coefficient_sensitivity"].copy()
 
     top_total = topsis.sort_values("CO2总量_Mt", ascending=False).head(8)[["省份", "CO2总量_Mt", "人均CO2_吨每人", "碳排放强度_吨每万元GDP"]]
     top_pc = topsis.sort_values("人均CO2_吨每人", ascending=False).head(5)[["省份", "人均CO2_吨每人", "碳排放强度_吨每万元GDP"]]
@@ -75,6 +77,18 @@ def write_summary_report(problem_one: dict[str, pd.DataFrame], problem_two: dict
     annual_visible = annual[["Year", "CO2 (Mt)", "记录天数", "是否完整年份"]]
     peak_visible = peak.copy()
     peak_visible["2045较峰值下降比例"] = peak_visible["2045较峰值下降比例"].map(percent)
+    single_focus = single_sensitivity[
+        single_sensitivity["情景"].eq("基准情景") & single_sensitivity["扰动比例"].isin([-0.20, 0.20])
+    ].copy()
+    single_focus["扰动比例"] = single_focus["扰动比例"].map(lambda value: f"{value:+.0%}")
+    single_focus["影响强度"] = single_focus["2045变化_Mt"].abs()
+    single_focus = single_focus.sort_values("影响强度", ascending=False)[["扰动变量", "扰动比例", "达峰年份", "峰值变化_Mt", "2045变化_Mt"]].head(8)
+    coefficient_focus = coefficient_sensitivity[
+        coefficient_sensitivity["情景"].eq("基准情景") & coefficient_sensitivity["扰动比例"].isin([-0.10, 0.10])
+    ].copy()
+    coefficient_focus["扰动比例"] = coefficient_focus["扰动比例"].map(lambda value: f"{value:+.0%}")
+    coefficient_focus["影响强度"] = coefficient_focus["2045变化_Mt"].abs()
+    coefficient_focus = coefficient_focus.sort_values("影响强度", ascending=False)[["系数说明", "扰动比例", "达峰年份", "峰值变化_Mt", "2045变化_Mt"]].head(8)
     assumptions = scenario_driver_assumptions()
     scenario_param_summary = pd.DataFrame(
         [
@@ -188,6 +202,16 @@ OLS主要系数如下：
 
 基准情景下，全国排放在{int(base_peak['达峰年份'])}年达到峰值{base_peak['峰值_Mt']:.0f} Mt，之后缓慢下降，2045年为{base_peak['2045年_Mt']:.0f} Mt，较峰值下降{base_peak['2045较峰值下降比例']:.1%}。低碳情景下，全国排放在{int(low_peak['达峰年份'])}年附近达峰，2030年为{low_peak['2030年_Mt']:.0f} Mt，2045年较峰值下降{low_peak['2045较峰值下降比例']:.1%}。强化低碳情景下降幅最大，2045年降至{strong_peak['2045年_Mt']:.0f} Mt，较峰值下降{strong_peak['2045较峰值下降比例']:.1%}。从碳排放强度看，2045年基准、低碳和强化低碳情景较2024年分别下降{base_peak['2045较2024强度下降比例']:.1%}、{low_peak['2045较2024强度下降比例']:.1%}和{strong_peak['2045较2024强度下降比例']:.1%}。因此，煤炭占比下降、产业结构优化和人口经济变量的共同变化，是决定达峰时点和中长期减排潜力的关键。
 
+灵敏度分析方面，方案一对人口增长率、人均GDP增长率、煤炭占比下降速度、第二产业占比下降速度和城镇化率年变化分别进行±10%、±20%单因素扰动；方案四对STIRPAT核心系数进行±10%扰动。这里“下降速度+20%”表示负向占比变化的绝对幅度增大，即占比下降更快。基准情景下，单因素扰动对2045年排放影响最大的变量如下：
+
+{dataframe_to_markdown(single_focus, ".3f")}
+
+STIRPAT系数扰动结果如下：
+
+{dataframe_to_markdown(coefficient_focus, ".3f")}
+
+结果显示，2045年排放对煤炭占比变化和人均GDP增长最敏感；在模型系数层面，对煤炭占比系数和人均GDP系数最敏感。主要情景结论没有因小幅扰动而发生根本改变，说明模型具有一定稳健性。
+
 ## 5. 问题四：政策建议
 
 > 题目要求：“结合问题一至三的研究结论，针对‘双碳’目标实现路径，从优化能源结构、推动产业升级、实施区域差异化减排、强化技术创新、完善政策机制等方面，提出科学可行、针对性强、可操作性高的政策建议。”
@@ -198,7 +222,7 @@ OLS主要系数如下：
 
 - 问题一结果：`1.结果/问题一/01_空间差异指标.csv`等6个CSV文件
 - 问题二结果：`1.结果/问题二/01_OLS系数.csv`等6个CSV文件
-- 问题三结果：`1.结果/问题三/01_全国年度排放.csv`等7个CSV文件
+- 问题三结果：`1.结果/问题三/01_全国年度排放.csv`等9个CSV文件
 - 问题四报告：`1.结果/问题四/问题四_政策建议报告.md`
 - 图片目录：`2.图片/问题一`、`2.图片/问题二`、`2.图片/问题三`
 - 代码目录：`3.代码/问题一`、`3.代码/问题二`、`3.代码/问题三`、`3.代码/问题四`
@@ -285,7 +309,7 @@ python -m venv .venv
 - `1.结果/汇总/B题结果汇总.md`：按题目原问题逐条引用并给出详细解答。
 - `1.结果/问题一/`：空间差异、TOPSIS和聚类CSV结果。
 - `1.结果/问题二/`：OLS、VIF、岭回归和拟合残差CSV结果。
-- `1.结果/问题三/`：年度排放、情景参数、STIRPAT递推系数、预测序列和达峰结果。
+- `1.结果/问题三/`：年度排放、情景参数、STIRPAT递推系数、预测序列、达峰结果和灵敏度分析。
 - `1.结果/问题四/`：约500字政策建议报告。
 - `2.图片/`：按问题分文件夹保存PNG图片。
 
@@ -311,7 +335,17 @@ def validate_outputs(problem_one: dict[str, pd.DataFrame], problem_two: dict[str
     expected_csvs = {
         "问题一": ["01_空间差异指标", "02_熵权指标权重", "03_TOPSIS得分排名", "04_聚类K值检验", "05_K4聚类结果", "06_类型均值画像"],
         "问题二": ["01_OLS系数", "02_拟合优度", "03_VIF共线性检验", "04_拟合值残差", "05_岭回归交叉验证", "06_岭回归标准化系数"],
-        "问题三": ["01_全国年度排放", "02_2024部门排放", "03_情景参数", "04_2024-2045预测序列", "05_达峰与减排潜力", "06_STIRPAT递推系数", "07_驱动变量基准值"],
+        "问题三": [
+            "01_全国年度排放",
+            "02_2024部门排放",
+            "03_情景参数",
+            "04_2024-2045预测序列",
+            "05_达峰与减排潜力",
+            "06_STIRPAT递推系数",
+            "07_驱动变量基准值",
+            "08_单因素灵敏度分析",
+            "09_STIRPAT系数灵敏度分析",
+        ],
     }
     for problem, stems in expected_csvs.items():
         for stem in stems:
@@ -329,7 +363,12 @@ def validate_outputs(problem_one: dict[str, pd.DataFrame], problem_two: dict[str
             "04_4_经济发达效率型_均值画像雷达图",
         ],
         "问题二": ["05_STIRPAT标准化系数图", "06_OLS拟合值与真实值对比图"],
-        "问题三": ["07_三情景碳排放趋势图", "08_三情景峰值与减排潜力对比图"],
+        "问题三": [
+            "07_三情景碳排放趋势图",
+            "08_三情景峰值与减排潜力对比图",
+            "09_单因素灵敏度_2045排放影响图",
+            "10_STIRPAT系数灵敏度_2045排放影响图",
+        ],
     }
     for problem, stems in expected_figs.items():
         for stem in stems:
