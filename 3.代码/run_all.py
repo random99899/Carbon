@@ -258,7 +258,7 @@ python -m venv .venv
 - `1.结果/问题二/`：OLS、VIF、岭回归和拟合残差Excel结果。
 - `1.结果/问题三/`：年度排放、情景参数、预测序列和达峰结果。
 - `1.结果/问题四/`：约500字政策建议报告。
-- `2.图片/`：按问题分文件夹保存PNG和SVG双格式图片。
+- `2.图片/`：按问题分文件夹保存PNG图片。
 
 ## 可复现性说明
 
@@ -286,10 +286,9 @@ def validate_outputs(problem_one: dict[str, pd.DataFrame], problem_two: dict[str
     }
     for problem, stems in expected_figs.items():
         for stem in stems:
-            for suffix in ("png", "svg"):
-                path = PROBLEM_FIG_DIRS[problem] / f"{stem}.{suffix}"
-                if not path.exists() or path.stat().st_size == 0:
-                    raise AssertionError(f"图片未正确生成: {path}")
+            path = PROBLEM_FIG_DIRS[problem] / f"{stem}.png"
+            if not path.exists() or path.stat().st_size == 0:
+                raise AssertionError(f"图片未正确生成: {path}")
 
 
 def main() -> None:

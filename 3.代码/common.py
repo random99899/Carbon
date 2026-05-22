@@ -68,8 +68,7 @@ def setup_style() -> None:
 def save_fig(fig: plt.Figure, output_dir: Path, stem: str) -> None:
     fig.tight_layout()
     output_dir.mkdir(parents=True, exist_ok=True)
-    for suffix in ("png", "svg"):
-        fig.savefig(output_dir / f"{stem}.{suffix}", bbox_inches="tight")
+    fig.savefig(output_dir / f"{stem}.png", bbox_inches="tight")
     plt.close(fig)
 
 
