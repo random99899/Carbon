@@ -26,6 +26,7 @@ sys.path.append(str(CODE_ROOT))
 import json
 import matplotlib.pyplot as plt
 from matplotlib.collections import PatchCollection
+import matplotlib.patheffects as path_effects
 from matplotlib.patches import Patch
 from matplotlib.patches import Polygon as MplPolygon
 import numpy as np
@@ -287,16 +288,22 @@ def make_problem_one_figures(problem_one: dict[str, pd.DataFrame]) -> None:
         raise FileNotFoundError(f"缺少中国省级边界文件: {CHINA_GEOJSON}")
     geojson = json.loads(CHINA_GEOJSON.read_text(encoding="utf-8"))
     value_map = dict(zip(province["省份"].map(normalize_province_name), province["CO2总量_Mt"]))
-    top_label_provinces = set(province.nlargest(6, "CO2总量_Mt")["省份"].map(normalize_province_name))
     values = np.array(list(value_map.values()), dtype=float)
     norm = plt.Normalize(values.min(), values.max())
     cmap = plt.get_cmap("YlOrRd")
 
-    fig, ax = plt.subplots(figsize=(10.5, 8.2))
+    fig, ax = plt.subplots(figsize=(14, 9.2))
     missing_patches = []
     data_patches = []
     data_colors = []
     label_points = []
+    callout_positions = {
+        "北京": (124.4, 40.2),
+        "天津": (124.4, 38.4),
+        "上海": (124.2, 31.2),
+        "海南": (113.3, 18.7),
+    }
+    text_effect = [path_effects.withStroke(linewidth=3.8, foreground="white")]
     for feature in geojson["features"]:
         raw_name = feature.get("properties", {}).get("name", "")
         if not raw_name:
@@ -308,10 +315,9 @@ def make_problem_one_figures(problem_one: dict[str, pd.DataFrame]) -> None:
             for polygon in polygons:
                 data_patches.append(MplPolygon(polygon, closed=True))
                 data_colors.append(color)
-            if province_name in top_label_provinces:
-                center = feature.get("properties", {}).get("centroid") or feature.get("properties", {}).get("center")
-                if center:
-                    label_points.append((province_name, center[0], center[1]))
+            center = feature.get("properties", {}).get("centroid") or feature.get("properties", {}).get("center")
+            if center:
+                label_points.append((province_name, center[0], center[1], value_map[province_name]))
         else:
             for polygon in polygons:
                 missing_patches.append(MplPolygon(polygon, closed=True))
@@ -320,8 +326,36 @@ def make_problem_one_figures(problem_one: dict[str, pd.DataFrame]) -> None:
         ax.add_collection(PatchCollection(missing_patches, facecolor="#E5E7EB", edgecolor="white", linewidth=0.7, zorder=1))
     if data_patches:
         ax.add_collection(PatchCollection(data_patches, facecolor=data_colors, edgecolor="white", linewidth=0.8, zorder=2))
-    for name, x_coord, y_coord in label_points:
-        ax.text(x_coord, y_coord, name, fontsize=8, ha="center", va="center", color="#111827", zorder=3)
+    for name, x_coord, y_coord, value in label_points:
+        label = f"{name}\n{value:.1f}"
+        if name in callout_positions:
+            text_x, text_y = callout_positions[name]
+            ax.plot([x_coord, text_x], [y_coord, text_y], color="#111827", linewidth=0.8, zorder=3)
+            ax.scatter([x_coord], [y_coord], s=10, color="#111827", zorder=4)
+            text = ax.text(
+                text_x,
+                text_y,
+                label,
+                fontsize=8.4,
+                ha="left",
+                va="center",
+                color="#111827",
+                linespacing=1.12,
+                zorder=5,
+            )
+        else:
+            text = ax.text(
+                x_coord,
+                y_coord,
+                label,
+                fontsize=8.2,
+                ha="center",
+                va="center",
+                color="#111827",
+                linespacing=1.12,
+                zorder=4,
+            )
+        text.set_path_effects(text_effect)
     sm = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
     sm.set_array([])
     cbar = fig.colorbar(sm, ax=ax, fraction=0.032, pad=0.02)
