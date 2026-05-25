@@ -4,8 +4,8 @@ from __future__ import annotations
 总入口脚本
 
 作用：
-- 依次调用问题一、问题二、问题三、问题四的独立脚本。
-- 生成分类目录下的结果表、图片、政策建议和汇总报告。
+- 依次调用问题一、问题二、问题三的独立脚本。
+- 生成分类目录下的结果表和图片。
 - 执行必要的输出完整性检查。
 
 运行方式：
@@ -38,7 +38,6 @@ from common import (
 from 问题一.solve_problem1 import make_problem_one_figures, run_problem_one
 from 问题二.solve_problem2 import make_problem_two_figures, run_problem_two
 from 问题三.solve_problem3 import make_problem_three_figures, run_problem_three
-from 问题四.solve_problem4 import write_policy_report
 
 
 
@@ -111,7 +110,6 @@ def main() -> None:
     make_problem_one_figures(problem_one)
     make_problem_two_figures(problem_two)
     make_problem_three_figures(problem_three)
-    write_policy_report(problem_one, problem_two, problem_three)
     validate_outputs(problem_one, problem_two, problem_three)
     print("全部结果已按问题分类生成。")
     print(f"结果目录: {RESULT_DIR}")
