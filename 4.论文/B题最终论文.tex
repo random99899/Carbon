@@ -1,0 +1,461 @@
+\documentclass[UTF8,zihao=-4,fontset=windows]{ctexart}
+
+\usepackage[a4paper,top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{pdfpages}
+\usepackage{xcolor}
+\usepackage{fvextra}
+\usepackage{hyperref}
+
+\hypersetup{hidelinks}
+\pagestyle{plain}
+\linespread{1.0}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0pt}
+\renewcommand{\arraystretch}{1.18}
+\renewcommand{\thesection}{\arabic{section}}
+\renewcommand{\thesubsection}{\arabic{section}.\arabic{subsection}}
+\renewcommand{\thesubsubsection}{\arabic{section}.\arabic{subsection}.\arabic{subsubsection}}
+
+\ctexset{
+  section = {
+    format = \centering\heiti\zihao{4},
+    beforeskip = 1.5ex,
+    afterskip = 1.0ex
+  },
+  subsection = {
+    format = \raggedright\heiti\zihao{-4},
+    beforeskip = 1.2ex,
+    afterskip = 0.8ex
+  },
+  subsubsection = {
+    format = \raggedright\heiti\zihao{-4},
+    beforeskip = 1.0ex,
+    afterskip = 0.6ex
+  }
+}
+
+\captionsetup{font=small,labelsep=quad}
+\DefineVerbatimEnvironment{CodeBlock}{Verbatim}{
+  fontsize=\scriptsize,
+  breaklines=true,
+  breakanywhere=true,
+  frame=single,
+  rulecolor=\color{black!35},
+  numbers=left,
+  numbersep=4pt
+}
+
+\begin{document}
+
+\includepdf[pages=1,pagecommand={\thispagestyle{empty}}]{assets/第一页封面.pdf}
+
+\clearpage
+\setcounter{page}{1}
+
+\begin{center}
+{\heiti\zihao{3} 我国碳排放时空特征分析与趋势预测}
+\end{center}
+
+\begin{center}
+{\heiti\zihao{4} 摘要}
+\end{center}
+
+为把握我国碳排放空间差异、识别关键驱动因素并研判中长期达峰趋势，本文基于2019--2025年全国碳排放日度数据、2022年30省碳排放清单及相关统计数据，构建“空间差异评价--省份分类分级--驱动因素识别--多情景预测”的综合建模框架。首先，选取碳排放总量、人均碳排放、碳排放强度和煤炭相关排放占比等指标，利用变异系数、基尼系数、泰尔指数和省级空间热力图刻画区域差异，并结合熵权TOPSIS模型评价各省低碳发展水平。其次，采用K-means聚类将省份划分为资源依赖高排放型、工业制造高排放型、中等转型压力型和经济发达效率型。再次，构建STIRPAT模型识别碳排放驱动因素，并以岭回归和交叉验证检验稳健性。最后，以2024年全国排放为基准，利用STIRPAT系数递推预测2026--2045年基准、低碳和强化低碳三种情景下的碳排放总量与强度。结果表明，2022年省际碳排放呈现“北方资源能源高排放带、东部沿海制造业高排放带、中西南相对低排放区”的空间格局；30省碳排放总量基尼系数为0.3549，碳排放强度基尼系数为0.3883，排放效率差异更突出。STIRPAT估计显示，人口规模和煤炭相关排放占比是最稳定的正向驱动因素，模型调整$R^2$为0.8504。情景预测显示，基准情景下全国碳排放约在2032年达到峰值12435 Mt；低碳情景约在2026年达峰；强化低碳情景下降幅最大，2045年排放降至约7114 Mt。本文据此提出分区域、分行业、分阶段推进低碳转型的政策建议。
+
+\noindent{\heiti 关键词：}碳排放；空间差异；熵权TOPSIS；K-means聚类；STIRPAT模型；情景预测
+
+\clearpage
+
+\section{问题重述}
+
+实现碳达峰、碳中和是我国推动高质量发展和经济社会绿色转型的重要战略目标。我国幅员辽阔，不同省份在资源禀赋、人口规模、产业结构、能源结构和经济发展水平方面差异显著，由此导致碳排放在空间分布、排放效率和减排压力上呈现较强不均衡性。准确刻画省际碳排放差异，识别排放增长的主要驱动因素，并预测未来排放走势，对制定差异化、可操作的减排政策具有重要意义。
+
+题目要求结合附件碳排放数据及相关统计资料，完成以下四项任务。第一，选取碳排放总量、人均碳排放、碳排放强度等核心指标，分析各省碳排放空间分布特征与差异显著性，并综合排放规模、排放效率和经济关联度建立分类分级模型。第二，选取能源消费结构、产业结构、人均GDP、城镇化率、技术水平等关键指标，识别影响碳排放的核心驱动因素，构建定量预测模型并完成参数估计、显著性检验与模型优化。第三，基于最优预测模型设置基准、低碳、强化低碳三种情景，预测2026--2045年全国碳排放总量与强度变化趋势，判断碳达峰时间节点、峰值水平和减排潜力。第四，结合前三问结果，从能源结构优化、产业升级、区域差异化减排、技术创新和政策机制完善等方面提出针对性政策建议。
+
+\section{模型假设及符号说明}
+
+\subsection{模型假设}
+
+为保证模型建立和计算过程具有可操作性，本文作如下假设：
+
+（1）附件中碳排放数据真实可靠，各省统计口径在同一年份内具有可比性。
+
+（2）2022年省级横截面数据能够反映当前我国省际碳排放差异和主要结构特征。
+
+（3）人口、经济发展水平、能源结构、产业结构和城镇化水平是影响碳排放的重要因素，且可通过STIRPAT模型进行定量刻画。
+
+（4）全国中长期碳排放趋势可由人口、人均经济水平、煤炭占比、产业结构和城镇化率共同决定，且这些因素对碳排放的影响可由STIRPAT系数刻画。
+
+（5）情景预测中，各驱动变量变化率在2026--2045年间平滑变化，不考虑突发重大外部冲击。
+
+（6）附件1中2025年全国碳排放数据截至2025年9月30日，不能直接作为完整年度数据与2019--2024年进行同比比较，预测基准采用2024年全国排放量。
+
+\subsection{符号说明}
+
+\begin{table}[H]
+\centering
+\caption{主要符号说明}
+\begin{tabularx}{0.88\textwidth}{cX}
+\toprule
+符号 & 含义 \\
+\midrule
+$C_i$ & 第$i$个省份碳排放总量 \\
+$P_i$ & 第$i$个省份人口规模 \\
+$GDP_i$ & 第$i$个省份地区生产总值 \\
+$PC_i$ & 第$i$个省份人均碳排放 \\
+$CI_i$ & 第$i$个省份碳排放强度 \\
+$Coal_i$ & 第$i$个省份煤炭相关排放占比 \\
+$IS_i$ & 第$i$个省份第二产业占比 \\
+$A_i$ & 第$i$个省份人均GDP \\
+$U_i$ & 第$i$个省份城镇化率 \\
+$z_{ij}$ & 第$i$个省份第$j$个指标标准化值 \\
+$w_j$ & 第$j$个评价指标权重 \\
+$S_i$ & 第$i$个省份TOPSIS综合贴近度 \\
+$G$ & 基尼系数 \\
+$T$ & 泰尔指数 \\
+$CV$ & 变异系数 \\
+$g_P$ & 人口增长率 \\
+$g_A$ & 人均GDP增长率 \\
+$\Delta Coal$ & 煤炭相关排放占比变化量 \\
+$\Delta IS$ & 第二产业占比变化量 \\
+$\Delta U$ & 城镇化率变化量 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{问题分析及模型}
+
+\subsection{问题一分析及模型}
+
+问题一要求分析省际碳排放空间差异，并对各省碳排放水平进行分类分级。单独使用碳排放总量容易忽视人口规模、经济发展水平和产业结构差异，因此本文从排放规模、排放效率、能源结构、产业结构和经济发展水平五个方面构建指标体系。
+
+首先，采用变异系数、基尼系数和泰尔指数衡量各省碳排放差异。变异系数反映相对离散程度，基尼系数反映空间分布不均衡程度，泰尔指数可进一步衡量整体差异强弱。其计算公式为
+\[
+CV=\frac{\sigma}{\mu},
+\]
+\[
+G=\frac{2\sum_{i=1}^{n}ix_i}{n\sum_{i=1}^{n}x_i}-\frac{n+1}{n},
+\]
+\[
+T=\frac{1}{n}\sum_{i=1}^{n}\frac{x_i}{\bar{x}}\ln\left(\frac{x_i}{\bar{x}}\right).
+\]
+
+同时，为更直观刻画省际排放的地理集聚特征，本文将2022年各省CO$_2$排放总量与省级行政边界匹配，绘制全国省级碳排放空间分布热力图。热力图可直接反映高排放省份在华北、内蒙古及东部沿海工业带附近的空间集中现象，从而弥补单纯排序图无法体现地理位置关系的不足。
+
+其次，构建熵权TOPSIS综合评价模型。TOPSIS方法可通过理想解与负理想解距离刻画评价对象的相对优劣，本文结合熵权法确定客观权重后进行综合评价[1]。对正向指标和负向指标分别标准化：
+\[
+z_{ij}=\frac{x_{ij}-\min x_j}{\max x_j-\min x_j},
+\quad
+z_{ij}=\frac{\max x_j-x_{ij}}{\max x_j-\min x_j}.
+\]
+计算指标比重、熵值和权重：
+\[
+p_{ij}=\frac{z_{ij}}{\sum_{i=1}^{n}z_{ij}},
+\quad
+e_j=-\frac{1}{\ln n}\sum_{i=1}^{n}p_{ij}\ln p_{ij},
+\quad
+w_j=\frac{1-e_j}{\sum_{j=1}^{m}(1-e_j)}.
+\]
+最后计算TOPSIS贴近度：
+\[
+S_i=\frac{D_i^-}{D_i^++D_i^-}.
+\]
+$S_i$越大，说明该省低碳发展综合表现越好。
+
+最后，采用K-means聚类对省份进行分类。K-means聚类通过最小化类内平方误差将样本划分为若干类别，适合对多指标省份样本进行类型识别[2]。输入变量为
+\[
+X_i=(C_i,PC_i,CI_i,Coal_i,IS_i,A_i,U_i),
+\]
+聚类目标函数为
+\[
+\min \sum_{k=1}^{K}\sum_{i\in G_k}\|X_i-\mu_k\|^2.
+\]
+
+\subsection{问题二分析及模型}
+
+问题二要求识别影响碳排放的关键因素并构建预测模型。碳排放不仅受人口规模和经济发展影响，也与能源结构、产业结构和城镇化水平有关。为兼顾解释性和可估计性，本文采用STIRPAT模型进行驱动因素识别[3]。
+
+STIRPAT模型由IPAT恒等式扩展而来：
+\[
+I=aP^bA^cT^d e.
+\]
+结合本文数据，将其扩展为
+\[
+\ln C_i=\alpha+\beta_1\ln P_i+\beta_2\ln A_i+\beta_3 Coal_i+\beta_4 IS_i+\beta_5U_i+\varepsilon_i.
+\]
+其中，$\ln P_i$表示人口规模，$\ln A_i$表示人均GDP，$Coal_i$表示煤炭相关排放占比，$IS_i$表示第二产业占比，$U_i$表示城镇化率。
+
+为检验模型可靠性，本文采用普通最小二乘法估计参数，并通过$R^2$、调整$R^2$、F检验、t检验评价拟合效果和变量显著性。同时采用VIF检验多重共线性，并使用岭回归进行稳健性检验。岭回归目标函数为
+\[
+\min \left\{\sum_{i=1}^{n}(y_i-\hat y_i)^2+\lambda\sum_{j=1}^{p}\beta_j^2\right\}.
+\]
+
+\subsection{问题三分析及模型}
+
+问题三要求预测2026--2045年全国碳排放趋势，并判断达峰年份和减排潜力。由于全国年度样本较短，若直接建立多变量时间序列回归，参数稳定性不足。因此本文以问题二估计得到的STIRPAT系数为核心，构建锚定基准年的情景递推预测模型。
+
+问题二得到的STIRPAT模型为
+\[
+\ln C=\alpha+\beta_1\ln P+\beta_2\ln A+\beta_3Coal+\beta_4IS+\beta_5U+\varepsilon.
+\]
+将其转化为年度相对变化形式：
+\[
+\Delta \ln C_t=\beta_1\Delta \ln P_t+\beta_2\Delta \ln A_t+\beta_3\Delta Coal_t+\beta_4\Delta IS_t+\beta_5\Delta U_t.
+\]
+于是年度递推公式为
+\[
+C_t=C_{t-1}\exp(\Delta \ln C_t).
+\]
+其中$P$表示人口规模，$A$表示人均GDP，$Coal$表示煤炭相关排放占比，$IS$表示第二产业占比，$U$表示城镇化率。该处理方式既保留STIRPAT模型的驱动因素解释，又避免直接使用省级横截面模型截距预测全国绝对排放量；全国排放水平由2024年实际排放锚定。
+
+本文设置三类情景：基准情景表示人均GDP保持中速增长、煤炭占比和第二产业占比缓慢下降；低碳情景表示煤炭占比下降和产业结构优化速度加快；强化低碳情景表示煤炭替代、产业升级和低碳城镇化进一步强化。人口增长率和人均GDP增长率为年度相对增长率；煤炭占比、第二产业占比和城镇化率为年度占比变化量，单位为百分点。达峰判断标准为：在预测区间内寻找碳排放总量最大值，其对应年份即为达峰年份，最大值即为峰值水平。
+
+为检验情景预测结论的稳健性，本文进一步设置两类灵敏度分析。第一，对人口增长率、人均GDP增长率、煤炭占比下降速度、第二产业占比下降速度和城镇化率年变化分别进行$\pm 10\%$、$\pm 20\%$单因素扰动，观察达峰年份、峰值水平和2045年排放变化。其中“下降速度+20\%”表示负向占比变化的绝对幅度增大，即占比下降更快。第二，对STIRPAT模型中的核心系数分别进行$\pm 10\%$扰动，检验问题二参数估计误差对问题三预测结论的影响。
+
+\subsection{问题四分析}
+
+问题四要求提出政策建议。政策建议应直接服务于前三问结论：问题一提供省份类型，问题二揭示关键驱动因素，问题三给出未来趋势和达峰压力。因此，本文从区域分类、能源结构、产业结构、技术创新和政策机制五个角度提出建议。
+
+\section{求解方法、结果及其分析和检验}
+
+\subsection{问题一求解结果及分析}
+
+基于2022年30省数据，首先计算碳排放总量、人均碳排放、碳排放强度和煤炭相关排放占比的空间差异指标，结果如表\ref{tab:spatial}所示。
+
+\begin{table}[H]
+\centering
+\caption{省际碳排放空间差异指标}
+\label{tab:spatial}
+\small
+\begin{tabular}{lrrrrrr}
+\toprule
+指标 & 均值 & 变异系数 & 基尼系数 & 泰尔指数 & 最小值 & 最大值 \\
+\midrule
+CO$_2$总量/Mt & 380.2822 & 0.6458 & 0.3549 & 0.2041 & 44.6919 & 920.9053 \\
+人均CO$_2$/吨每人 & 9.8017 & 0.7957 & 0.3513 & 0.2312 & 3.2763 & 36.6002 \\
+碳排放强度/吨每万元GDP & 1.3011 & 0.7958 & 0.3883 & 0.2555 & 0.1720 & 4.8805 \\
+煤炭相关排放占比 & 0.7113 & 0.2510 & 0.1263 & 0.0447 & 0.0212 & 0.9399 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+结合图\ref{fig:map}可以看出，2022年我国30省碳排放并非均匀分布，而是呈现明显的地理集聚特征。高排放区域首先集中在华北--环渤海及内蒙古能源基地一带，山东、内蒙古、河北、山西、辽宁构成北方高排放集聚区。其中山东、河北、辽宁主要与钢铁、石化、装备制造等重工业基础有关，内蒙古、山西则更多体现为煤炭资源开发和能源外送带来的高排放特征。其次，东部沿海制造业省份排放总量也较高，江苏、广东、浙江、福建等省沿海成带分布，说明经济规模、工业制造和外向型产业集聚对排放总量具有显著抬升作用。再次，中西部和西南多数省份排放总量处于中低水平，但新疆因能源资源开发形成西北地区局部高值；青海、海南、北京等省市排放总量较低，与人口规模、产业结构和生态功能定位有关。因此，省际碳排放空间格局可概括为“北方资源能源高排放带、东部沿海制造业高排放带、中西南相对低排放区、局部资源型高值点”。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.94\textwidth]{assets/fig1_map.png}
+\caption{2022年省级CO$_2$排放总量空间分布热力图}
+\label{fig:map}
+\end{figure}
+
+差异显著性方面，2022年30省CO$_2$总量均值为380.2822 Mt，但最大值山东为920.9053 Mt，最小值海南为44.6919 Mt，二者相差约20.61倍；排放总量前8位省份合计占30省总排放的50.72\%，说明排放明显集中在少数重点省份。统计指标进一步验证了这种空间不均衡：CO$_2$总量变异系数为0.6458、基尼系数为0.3549、泰尔指数为0.2041，表明省际排放总量差异显著。人均CO$_2$变异系数为0.7957，碳排放强度变异系数为0.7958、基尼系数为0.3883，说明资源型地区和重工业地区不仅排放总量高，单位人口和单位经济产出的排放压力也更突出。
+
+熵权TOPSIS评价结果显示，指标权重前三位为人均GDP、煤炭相关排放占比和城镇化率，权重分别为0.2728、0.2215和0.1717。这说明综合低碳发展水平不仅取决于排放本身，还与经济发展质量、能源结构和城市治理能力密切相关。TOPSIS得分排名靠前的省份为北京、上海、天津、海南、浙江、福建、重庆、广东；排名靠后的省份为山西、内蒙古、新疆、河北、宁夏、河南、山东、甘肃。前者通常具有较低排放强度、较高人均GDP或较优能源结构，后者则主要受到煤炭占比高、排放强度高或工业结构偏重的影响。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{assets/fig2_scatter.png}
+\caption{人均CO$_2$与碳排放强度关系}
+\label{fig:scatter}
+\end{figure}
+
+聚类模型检验中，K=2至6的轮廓系数分别为0.349、0.405、0.284、0.282和0.312。K=3时轮廓系数最高，但K=4能够更清晰地区分资源依赖、工业制造、中等转型和经济发达效率型省份，政策解释性更强。因此本文采用K=4作为最终分类，结果如表\ref{tab:cluster}所示。
+
+\begin{table}[H]
+\centering
+\caption{K-means聚类分类结果}
+\label{tab:cluster}
+\begin{tabularx}{\textwidth}{p{3.2cm}p{7.1cm}X}
+\toprule
+类型 & 省份 & 结果分析 \\
+\midrule
+资源依赖高排放型 & 河北、山西、内蒙古、宁夏、新疆 & 煤炭占比和排放强度高，减排重点是控煤和资源型产业转型 \\
+工业制造高排放型 & 天津、辽宁、江苏、浙江、福建、山东、湖北、广东、重庆、陕西 & 排放总量较高，减排重点是重点行业节能改造 \\
+中等转型压力型 & 吉林、黑龙江、安徽、江西、河南、湖南、广西、海南、四川、贵州、云南、甘肃、青海 & 总量和强度居中，需防止高耗能产业转移 \\
+经济发达效率型 & 北京、上海 & 排放强度低，适合发挥技术、金融和治理优势 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{问题二求解结果及分析}
+
+根据2022年30省横截面数据建立STIRPAT模型，并采用OLS估计参数。主要系数与检验结果见表\ref{tab:ols}。模型$R^2$为0.8762，调整$R^2$为0.8504，RMSE\_log为0.2672，F检验$p$值为$3.919\times10^{-10}$，说明模型对省际碳排放差异具有较强解释力。
+
+\begin{table}[H]
+\centering
+\caption{STIRPAT模型OLS估计结果}
+\label{tab:ols}
+\begin{tabular}{lrrrr}
+\toprule
+变量 & 系数 & 标准误 & t值 & p值 \\
+\midrule
+$\ln P$ & 0.6447 & 0.0807 & 7.9856 & 0.0000 \\
+$\ln A$ & 0.4502 & 0.3860 & 1.1663 & 0.2549 \\
+煤炭相关排放占比 & 2.8275 & 0.5798 & 4.8770 & 0.0001 \\
+第二产业占比 & 0.5080 & 1.1516 & 0.4412 & 0.6630 \\
+城镇化率 & 0.8029 & 1.3461 & 0.5965 & 0.5565 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+从参数估计结果看，人口规模和煤炭相关排放占比对碳排放具有显著正向影响。其中，$\ln P$系数为0.6447，说明人口规模扩大将显著增加碳排放；煤炭相关排放占比系数为2.8275，且$p$值较小，说明能源结构中煤炭依赖程度是影响省际排放差异的关键因素。人均GDP、第二产业占比和城镇化率系数为正但显著性较弱，这并不意味着这些因素不重要，而是说明在2022年横截面样本中，它们的影响可能通过能源结构、产业结构和区域发展阶段间接体现。
+
+VIF检验结果显示，$\ln P$、$\ln A$、煤炭相关排放占比、第二产业占比和城镇化率的VIF分别为1.205、6.568、3.601、2.945和5.308，均小于10，说明不存在严重多重共线性。为进一步检验稳健性，本文采用岭回归进行留一交叉验证，得到LOOCV\_$R^2$为0.7851，LOOCV\_RMSE\_log为0.3520。岭回归标准化系数排序显示，煤炭相关排放占比和人口规模仍是最重要变量，说明核心结论稳定。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{assets/fig4_stirpat_coef.png}
+\caption{STIRPAT岭回归标准化系数}
+\label{fig:coef}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{assets/fig5_ols_fit.png}
+\caption{OLS拟合值与真实值对比}
+\label{fig:olsfit}
+\end{figure}
+
+\subsection{问题三求解结果及分析}
+
+全国年度碳排放总量仅使用附件1中`Sector=Total'统计，避免将总量与部门排放重复相加。2019--2024年全国碳排放整体处于高位波动状态，2023年达到11952.40 Mt，2024年为11901.44 Mt。2025年数据只有273天记录，不能作为完整年度值进行同比比较。因此，本文以2024年全国排放量11901.44 Mt作为情景预测基准。
+
+\begin{table}[H]
+\centering
+\caption{全国年度CO$_2$排放核验}
+\label{tab:annual}
+\begin{tabular}{rrrr}
+\toprule
+年份 & CO$_2$总量/Mt & 记录天数 & 是否完整年份 \\
+\midrule
+2019 & 11148.50 & 365 & 是 \\
+2020 & 11193.00 & 366 & 是 \\
+2021 & 11619.03 & 365 & 是 \\
+2022 & 11627.06 & 365 & 是 \\
+2023 & 11952.40 & 365 & 是 \\
+2024 & 11901.44 & 366 & 是 \\
+2025 & 8615.64 & 273 & 否 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+三种情景的参数设置见表\ref{tab:scenario_params}。表中“起始$\rightarrow$末期”表示2025年至2045年按线性插值逐年平滑变化。
+
+\begin{table}[H]
+\centering
+\caption{三情景参数设置}
+\label{tab:scenario_params}
+\scriptsize
+\begin{tabularx}{\textwidth}{lXXXXX}
+\toprule
+情景 & 人口增长率 & 人均GDP增长率 & 煤炭占比年变化 & 第二产业占比年变化 & 城镇化率年变化 \\
+\midrule
+基准情景 & -0.10\%$\rightarrow$-0.20\% & 4.50\%$\rightarrow$2.60\% & -0.40$\rightarrow$-1.00百分点 & -0.05$\rightarrow$-0.20百分点 & 0.35$\rightarrow$0.15百分点 \\
+低碳情景 & -0.10\%$\rightarrow$-0.20\% & 4.30\%$\rightarrow$2.40\% & -0.60$\rightarrow$-1.40百分点 & -0.10$\rightarrow$-0.30百分点 & 0.30$\rightarrow$0.10百分点 \\
+强化低碳情景 & -0.10\%$\rightarrow$-0.25\% & 4.10\%$\rightarrow$2.20\% & -0.80$\rightarrow$-1.80百分点 & -0.20$\rightarrow$-0.50百分点 & 0.25$\rightarrow$0.05百分点 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+预测结果见表\ref{tab:peak}和图\ref{fig:scenario}。基准情景下，碳排放在2032年达到约12435 Mt峰值，随后进入缓慢下降阶段，2045年较峰值下降11.4\%。低碳情景下，排放约在2026年达到峰值11959 Mt，2030年为11829 Mt，2045年较峰值下降25.6\%。强化低碳情景下降幅最大，2045年降至7114 Mt，较峰值下降40.2\%。
+
+\begin{table}[H]
+\centering
+\caption{三情景达峰与减排潜力}
+\label{tab:peak}
+\scriptsize
+\begin{tabular}{lrrrrrr}
+\toprule
+情景 & 达峰年份 & 峰值/Mt & 2030年/Mt & 2035年/Mt & 2045年/Mt & 2045较峰值下降 \\
+\midrule
+低碳情景 & 2026 & 11959 & 11829 & 11229 & 8903 & 25.6\% \\
+基准情景 & 2032 & 12435 & 12404 & 12351 & 11014 & 11.4\% \\
+强化低碳情景 & 2024 & 11901 & 11258 & 10165 & 7114 & 40.2\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.88\textwidth]{assets/fig6_scenario.png}
+\caption{2024--2045年三情景碳排放趋势}
+\label{fig:scenario}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{assets/fig7_peak.png}
+\caption{三情景峰值与减排潜力对比}
+\label{fig:peak}
+\end{figure}
+
+结果表明，若仅延续基准转型速度，我国可能在2030年前后稍晚达峰，峰值水平较高、下降速度较慢；若加快煤炭替代和产业结构优化，则可使达峰时间提前并扩大中长期减排潜力。三种情景下碳排放强度均持续下降，说明经济增长与碳排放逐步脱钩，但不同政策强度下脱钩速度存在明显差异。
+
+灵敏度分析表明，2045年排放量对煤炭占比下降速度和人均GDP增长率最敏感。当煤炭占比下降速度减弱20\%时，2045年排放量增加约954.7 Mt，达峰年份推迟至2035年；当煤炭占比下降速度增强20\%时，2045年排放量减少约878.6 Mt，达峰年份提前至2030年。人均GDP增长率提高20\%会使2045年排放增加约734.3 Mt，降低20\%则使2045年排放减少约693.1 Mt。STIRPAT系数扰动结果也显示，煤炭占比系数和人均GDP系数对预测结论影响最大。总体来看，主要结论在合理扰动范围内未发生根本改变，说明模型具有一定稳健性。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.84\textwidth]{assets/fig8_sensitivity.png}
+\caption{单因素灵敏度对2045年排放的影响}
+\label{fig:sensitivity}
+\end{figure}
+
+\subsection{问题四政策建议}
+
+根据前三问结果，本文提出如下政策建议。第一，对资源依赖高排放型省份，应控制煤炭消费总量，推进煤电低碳改造和新能源基地建设，推动资源型产业转型。第二，对工业制造高排放型省份，应聚焦钢铁、建材、电力、石化和交通等重点行业，实施节能改造、电气化替代和绿色供应链管理。第三，对中等转型压力型省份，应在承接产业转移时设置能耗和碳排放准入门槛，防止高耗能产业简单转移。第四，对经济发达效率型地区，应发挥绿色金融、碳交易、数字化碳管理和技术创新优势。第五，从全国层面看，应持续降低煤炭占比，扩大非化石能源供给，强化技术创新和碳市场机制。
+
+\section{模型的优缺点及改进方向}
+
+\subsection{模型优点}
+
+第一，模型体系完整。本文从空间差异、综合评价、分类分级、驱动因素识别、趋势预测和政策建议六个层面展开，能够完整回应题目四个问题。第二，解释性较强。熵权TOPSIS、K-means聚类和STIRPAT模型均具有较清晰的经济含义，便于解释不同省份的低碳发展水平和排放驱动机制。第三，结果展示直观。空间差异指标、TOPSIS排名、聚类类型、回归系数和情景预测结果都通过表格和图形清晰呈现。第四，情景预测逻辑稳定。STIRPAT递推模型将问题二估计得到的驱动因素系数直接用于问题三预测，使驱动因素识别与中长期趋势研判形成衔接。
+
+\subsection{模型不足}
+
+第一，省级建模主要基于2022年横截面数据，无法充分刻画各省碳排放随时间变化的动态机制。第二，STIRPAT模型采用线性对数形式，难以反映复杂非线性关系和变量之间的交互效应。第三，情景预测依赖参数设定，不同参数组合会影响达峰年份和减排潜力判断。第四，当前模型主要分析省际差异，没有进一步考虑相邻地区之间的空间溢出效应。
+
+\subsection{改进方向}
+
+若能补充多年省级面板数据，可进一步建立双向固定效应STIRPAT模型，控制省份个体差异和年份冲击。还可引入空间计量模型，分析碳排放在相邻省份之间的空间相关性和溢出效应。未来也可采用LMDI分解进一步量化经济规模、产业结构、能源结构和能源强度对排放变化的贡献，并与STIRPAT结果相互验证。在情景预测中，可对煤炭占比下降速度、第二产业占比调整速度、人均GDP增长路径等关键参数进行更系统的敏感性分析，提高预测结论的稳健性。
+
+\section{参考文献}
+
+[1] Deng H，Yeh C H，Willis R J，Inter-company comparison using modified TOPSIS with objective weights，Computers \& Operations Research，27(10)：963-973，2000。
+
+[2] MacQueen J，Some methods for classification and analysis of multivariate observations，Proceedings of the Fifth Berkeley Symposium on Mathematical Statistics and Probability，1：281-297，1967。
+
+[3] York R，Rosa E A，Dietz T，STIRPAT, IPAT and ImPACT: analytic tools for unpacking the driving forces of environmental impacts，Ecological Economics，46(3)：351-365，2003。
+
+\clearpage
+\appendix
+\section{附录：必要计算机程序}
+
+本文计算结果由Python程序统一生成。附录列出核心程序，包括总入口脚本、公共函数和问题一至问题四的求解脚本。
+
+\subsection{总入口脚本 run\_all.py}
+\VerbatimInput[fontsize=\tiny,breaklines=true,breakanywhere=true,numbers=left,frame=single]{assets/code/run_all.py}
+
+\subsection{公共函数 common.py}
+\VerbatimInput[fontsize=\tiny,breaklines=true,breakanywhere=true,numbers=left,frame=single]{assets/code/common.py}
+
+\subsection{问题一求解脚本 solve\_problem1.py}
+\VerbatimInput[fontsize=\tiny,breaklines=true,breakanywhere=true,numbers=left,frame=single]{assets/code/solve_problem1.py}
+
+\subsection{问题二求解脚本 solve\_problem2.py}
+\VerbatimInput[fontsize=\tiny,breaklines=true,breakanywhere=true,numbers=left,frame=single]{assets/code/solve_problem2.py}
+
+\subsection{问题三求解脚本 solve\_problem3.py}
+\VerbatimInput[fontsize=\tiny,breaklines=true,breakanywhere=true,numbers=left,frame=single]{assets/code/solve_problem3.py}
+
+\subsection{问题四求解脚本 solve\_problem4.py}
+\VerbatimInput[fontsize=\tiny,breaklines=true,breakanywhere=true,numbers=left,frame=single]{assets/code/solve_problem4.py}
+
+\end{document}
