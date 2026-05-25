@@ -23,4 +23,4 @@
 
 ## Latex说明
 
-- 本机装有Tex Live，安装目录在"C:\texlive\2026"中，可用于本地编写tex文件编译pdf。
+- 本机装有Tex Live，安装目录在"C:\texlive\2026"中，已配置好环境变量，可用于本地编写tex文件编译pdf。
