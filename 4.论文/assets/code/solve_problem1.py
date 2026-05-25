@@ -9,7 +9,7 @@ from __future__ import annotations
 - K-means聚类：按标准化后的7个指标将省份划分为4类，并计算K=2至6的轮廓系数作为检验。
 
 使用数据：
-- 输入：数据/2022省级综合表.xlsx，工作表"主表"。
+- 输入：数据/2022省级综合表.xlsx，工作表“主表”。
 - 辅助边界：3.代码/assets/china_provinces.geojson，用于绘制省级空间分布热力图。
 - 输出：1.结果/问题一/ 下多个CSV结果文件。
 - 输出图片：2.图片/问题一/01至05号图。
@@ -237,13 +237,13 @@ def make_problem_one_figures(problem_one: dict[str, pd.DataFrame]) -> None:
     save_fig(fig, FIG_DIR, "01_省份CO2总量排名图")
 
     fig, ax = plt.subplots(figsize=(9, 6))
-    scatter_data = province.rename(columns={"CO2总量_Mt": "CO^2总量（Mt）"})
+    scatter_data = province.rename(columns={"CO2总量_Mt": "CO²总量（Mt）"})
     sns.scatterplot(
         data=scatter_data,
         x="人均CO2_吨每人",
         y="碳排放强度_吨每万元GDP",
         hue="类型",
-        size="CO^2总量（Mt）",
+        size="CO²总量（Mt）",
         sizes=(120, 900),
         alpha=0.8,
         ax=ax,
@@ -273,7 +273,7 @@ def make_problem_one_figures(problem_one: dict[str, pd.DataFrame]) -> None:
     ax.set_ylabel("碳排放强度（吨/万元GDP）")
     handles, labels = ax.get_legend_handles_labels()
     ax.legend_.remove()
-    size_header = "CO^2总量（Mt）"
+    size_header = "CO²总量（Mt）"
     size_start = labels.index(size_header)
     type_handles = handles[1:size_start]
     type_labels = labels[1:size_start]
@@ -359,9 +359,9 @@ def make_problem_one_figures(problem_one: dict[str, pd.DataFrame]) -> None:
     sm = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
     sm.set_array([])
     cbar = fig.colorbar(sm, ax=ax, fraction=0.032, pad=0.02)
-    cbar.set_label("CO^2总量（Mt）")
+    cbar.set_label("CO²总量（Mt）")
     ax.legend(handles=[Patch(facecolor="#E5E7EB", edgecolor="white", label="无数据或未纳入30省样本")], loc="lower left", frameon=True)
-    ax.set_title("2022年省级CO^2排放总量空间分布")
+    ax.set_title("2022年省级CO²排放总量空间分布")
     ax.set_xlim(72, 136)
     ax.set_ylim(17, 55)
     ax.set_aspect("equal")

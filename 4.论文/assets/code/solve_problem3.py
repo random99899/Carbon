@@ -9,7 +9,7 @@ from __future__ import annotations
 - 达峰研判：逐情景寻找预测序列最大值，输出达峰年份、峰值水平、碳排放强度和减排潜力。
 
 使用数据：
-- 输入：数据/附件1：2019-2025 年全国碳排放数据.csv、数据/全国数据.xlsx、问题二STIRPAT系数。
+- 输入：数据/附件1：2019—2025 年全国碳排放数据.csv、数据/全国数据.xlsx、问题二STIRPAT系数。
 - 输出：1.结果/问题三/ 下多个CSV结果文件。
 - 输出图片：2.图片/问题三/07_三情景碳排放趋势图、08_三情景峰值与减排潜力对比图。
 """
@@ -371,11 +371,11 @@ def make_problem_three_figures(problem_three: dict[str, pd.DataFrame]) -> None:
     peak = problem_three["peak"].copy()
     scenario_order = ["基准情景", "低碳情景", "强化低碳情景"]
     fig, ax = plt.subplots(figsize=(13, 5.5))
-    plot_data = forecast[forecast["年份"].between(2024, 2045)].rename(columns={"预测CO2_Mt": "预测CO^2排放量（Mt）"})
+    plot_data = forecast[forecast["年份"].between(2024, 2045)].rename(columns={"预测CO2_Mt": "预测CO²排放量（Mt）"})
     sns.lineplot(
         data=plot_data,
         x="年份",
-        y="预测CO^2排放量（Mt）",
+        y="预测CO²排放量（Mt）",
         hue="情景",
         hue_order=scenario_order,
         linewidth=2.4,
@@ -384,8 +384,8 @@ def make_problem_three_figures(problem_three: dict[str, pd.DataFrame]) -> None:
         ax=ax,
     )
     color_map = {text.get_text(): handle.get_color() for text, handle in zip(ax.legend_.texts, ax.legend_.legend_handles)}
-    y_min = plot_data["预测CO^2排放量（Mt）"].min() * 0.97
-    ax.set_ylim(y_min, plot_data["预测CO^2排放量（Mt）"].max() * 1.03)
+    y_min = plot_data["预测CO²排放量（Mt）"].min() * 0.97
+    ax.set_ylim(y_min, plot_data["预测CO²排放量（Mt）"].max() * 1.03)
     peak["情景"] = pd.Categorical(peak["情景"], categories=scenario_order, ordered=True)
     peak = peak.sort_values("情景").reset_index(drop=True)
     peak["情景"] = peak["情景"].astype(str)
@@ -401,9 +401,9 @@ def make_problem_three_figures(problem_three: dict[str, pd.DataFrame]) -> None:
         if year in peak_year_colors:
             label.set_color(peak_year_colors[year])
     ax.legend(title="情景", loc="upper left", bbox_to_anchor=(1.01, 1), frameon=True)
-    ax.set_title("2024-2045年全国CO^2排放三情景STIRPAT预测")
+    ax.set_title("2024-2045年全国CO²排放三情景STIRPAT预测")
     ax.set_xlabel("年份")
-    ax.set_ylabel("CO^2排放量（Mt）")
+    ax.set_ylabel("CO²排放量（Mt）")
     save_fig(fig, FIG_DIR, "07_三情景碳排放趋势图")
 
     peak = problem_three["peak"].copy()
@@ -470,7 +470,7 @@ def make_problem_three_figures(problem_three: dict[str, pd.DataFrame]) -> None:
     )
     ax.axvline(0, color="#333333", linewidth=1)
     ax.set_title("单因素灵敏度：基准情景2045排放影响")
-    ax.set_xlabel("2045年CO^2排放变化量（Mt）")
+    ax.set_xlabel("2045年CO²排放变化量（Mt）")
     ax.set_ylabel("")
     ax.legend(title="扰动比例", frameon=True)
     save_fig(fig, FIG_DIR, "09_单因素灵敏度_2045排放影响图")
@@ -496,7 +496,7 @@ def make_problem_three_figures(problem_three: dict[str, pd.DataFrame]) -> None:
     )
     ax.axvline(0, color="#333333", linewidth=1)
     ax.set_title("STIRPAT系数灵敏度：基准情景2045排放影响")
-    ax.set_xlabel("2045年CO^2排放变化量（Mt）")
+    ax.set_xlabel("2045年CO²排放变化量（Mt）")
     ax.set_ylabel("")
     ax.legend(title="扰动比例", frameon=True)
     save_fig(fig, FIG_DIR, "10_STIRPAT系数灵敏度_2045排放影响图")

@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>问题四：双碳目标政策建议报告</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    body {
+      margin: 0;
+      width: 210mm;
+      height: 297mm;
+      font-family: "Microsoft YaHei", "SimSun", serif;
+      color: #1f2933;
+      background: #f3f6f4;
+    }
+    .page {
+      position: relative;
+      width: 210mm;
+      height: 297mm;
+      padding: 17mm 18mm 18mm;
+      overflow: hidden;
+      background:
+        linear-gradient(135deg, rgba(30, 104, 74, 0.10), transparent 38%),
+        linear-gradient(315deg, rgba(45, 108, 170, 0.10), transparent 42%),
+        #fbfcfa;
+    }
+    .page::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border: 7mm solid #eef4ef;
+      pointer-events: none;
+    }
+    .header {
+      position: relative;
+      padding-bottom: 9mm;
+      border-bottom: 1.2px solid #2f6f59;
+    }
+    .eyebrow {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: #e7f1ea;
+      color: #2f6f59;
+      font-size: 12px;
+      letter-spacing: 0;
+      font-weight: 700;
+    }
+    h1 {
+      margin: 8px 0 6px;
+      font-size: 28px;
+      line-height: 1.25;
+      font-weight: 800;
+      color: #163b32;
+      letter-spacing: 0;
+    }
+    .subtitle {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.7;
+      color: #50606b;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7mm;
+      margin: 10mm 0 8mm;
+    }
+    .metric {
+      min-height: 25mm;
+      padding: 6mm 5mm;
+      border-left: 4px solid #2f6f59;
+      background: rgba(255, 255, 255, 0.82);
+      box-shadow: 0 4px 18px rgba(24, 54, 42, 0.08);
+    }
+    .metric strong {
+      display: block;
+      font-size: 21px;
+      color: #163b32;
+      line-height: 1.1;
+      margin-bottom: 3px;
+    }
+    .metric span {
+      font-size: 12px;
+      color: #60707a;
+      line-height: 1.45;
+    }
+    .section-title {
+      margin: 0 0 5mm;
+      font-size: 17px;
+      color: #163b32;
+      font-weight: 800;
+    }
+    .report {
+      position: relative;
+      padding: 8mm 9mm;
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid #dce8df;
+      box-shadow: 0 10px 28px rgba(24, 54, 42, 0.08);
+    }
+    .report p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.85;
+      text-align: justify;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 5mm;
+      margin-top: 7mm;
+    }
+    .card {
+      padding: 5mm 5mm 4mm;
+      border-top: 3px solid #2f6f59;
+      background: #f8fbf8;
+    }
+    .card h2 {
+      margin: 0 0 3mm;
+      font-size: 14px;
+      color: #1f5b49;
+      font-weight: 800;
+    }
+    .card p {
+      margin: 0;
+      font-size: 12.5px;
+      line-height: 1.65;
+      text-align: justify;
+      color: #36454f;
+    }
+    .footer {
+      position: absolute;
+      left: 18mm;
+      right: 18mm;
+      bottom: 12mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #6a7a81;
+      font-size: 11px;
+      border-top: 1px solid #d7e3db;
+      padding-top: 4mm;
+    }
+    .ribbon {
+      position: absolute;
+      right: -18mm;
+      top: 18mm;
+      width: 80mm;
+      height: 80mm;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(47, 111, 89, 0.12), transparent 68%);
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="ribbon"></div>
+    <header class="header">
+      <span class="eyebrow">问题四 · 政策建议报告</span>
+      <h1>“双碳”目标实现路径与区域减排建议</h1>
+      <p class="subtitle">依据省际空间差异、STIRPAT驱动因素识别和2026—2045年情景预测结果，形成面向能源、产业、区域和机制的综合政策方案。</p>
+    </header>
+
+    <section class="metrics">
+      <div class="metric">
+        <strong>2032年</strong>
+        <span>基准情景达峰时间偏晚，峰值约12435 Mt。</span>
+      </div>
+      <div class="metric">
+        <strong>40.2%</strong>
+        <span>强化低碳情景下2045年较峰值下降幅度。</span>
+      </div>
+      <div class="metric">
+        <strong>煤炭占比</strong>
+        <span>模型识别出的关键结构性驱动因素。</span>
+      </div>
+    </section>
+
+    <section class="report">
+      <h2 class="section-title">综合建议</h2>
+      <p>结合问题一至三的研究结论，我国推进“双碳”目标应坚持“控总量、调结构、提效率、分区域、强机制”的路径。首先，优化能源结构是达峰和深度减排的核心，应持续压降煤炭相关排放占比，推动煤电灵活性改造和清洁高效利用，同时扩大风电、光伏、水电、核电及储能等非化石能源供给。其次，推动产业升级应聚焦钢铁、建材、电力、石化和交通等重点行业，建立单位产品碳强度约束，推广余热利用、电气化替代、绿色供应链和循环经济。再次，区域减排应分类实施：河北、山西、内蒙古、宁夏、新疆等资源依赖高排放型省份重点控煤和转型；江苏、山东、广东、辽宁等工业制造高排放型省份重点推进重点行业节能改造；中等转型压力型省份严控高耗能产业转移；北京、上海发挥绿色金融、碳交易和数字化治理示范作用。最后，应强化低碳技术创新和政策机制衔接，完善碳市场、绿色金融、能耗和碳排放双控考核，形成可量化、可追踪、可持续的减排体系。</p>
+
+      <div class="cards">
+        <div class="card">
+          <h2>能源结构</h2>
+          <p>以煤炭替代和非化石能源扩张为主线，优先降低高煤依赖省份的边际排放。</p>
+        </div>
+        <div class="card">
+          <h2>产业升级</h2>
+          <p>围绕高耗能行业开展节能改造，以强度约束倒逼生产方式绿色转型。</p>
+        </div>
+        <div class="card">
+          <h2>区域协同</h2>
+          <p>按省份类型制定差异化政策，避免“一刀切”和高耗能产业简单转移。</p>
+        </div>
+        <div class="card">
+          <h2>机制保障</h2>
+          <p>以碳市场、绿色金融和数字化碳管理提高政策执行的可考核性。</p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span>模型依据：熵权TOPSIS、K-means、STIRPAT情景预测</span>
+      <span>结论导向：提前达峰 · 结构降碳 · 分区治理</span>
+    </footer>
+  </main>
+</body>
+</html>

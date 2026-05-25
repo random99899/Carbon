@@ -10,7 +10,7 @@ from __future__ import annotations
 - 岭回归留一交叉验证：用正则化模型检验驱动因素排序和预测稳健性。
 
 使用数据：
-- 输入：数据/2022省级综合表.xlsx，工作表"主表"。
+- 输入：数据/2022省级综合表.xlsx，工作表“主表”。
 - 输出：1.结果/问题二/ 下多个CSV结果文件。
 - 输出图片：2.图片/问题二/05_STIRPAT标准化系数图、06_OLS拟合值与真实值对比图。
 """
@@ -171,8 +171,8 @@ def make_problem_two_figures(problem_two: dict[str, pd.DataFrame]) -> None:
     lim_max = max(fitted["实际CO2_Mt"].max(), fitted["拟合CO2_Mt"].max()) * 1.08
     plot_data = fitted.rename(
         columns={
-            "实际CO2_Mt": "实际CO^2排放量（Mt）",
-            "拟合CO2_Mt": "拟合CO^2排放量（Mt）",
+            "实际CO2_Mt": "实际CO²排放量（Mt）",
+            "拟合CO2_Mt": "拟合CO²排放量（Mt）",
             "绝对误差_Mt": "绝对误差（Mt）",
         }
     )
@@ -182,8 +182,8 @@ def make_problem_two_figures(problem_two: dict[str, pd.DataFrame]) -> None:
     fig, ax = plt.subplots(figsize=(8.5, 7))
     sns.scatterplot(
         data=plot_data,
-        x="实际CO^2排放量（Mt）",
-        y="拟合CO^2排放量（Mt）",
+        x="实际CO²排放量（Mt）",
+        y="拟合CO²排放量（Mt）",
         hue="误差方向",
         size="绝对误差（Mt）",
         sizes=(50, 280),
@@ -215,8 +215,8 @@ def make_problem_two_figures(problem_two: dict[str, pd.DataFrame]) -> None:
     ax.set_xlim(lim_min, lim_max)
     ax.set_ylim(lim_min, lim_max)
     ax.set_title("STIRPAT模型实际值与拟合值对比及误差说明")
-    ax.set_xlabel("实际CO^2排放量（Mt）")
-    ax.set_ylabel("模型拟合CO^2排放量（Mt）")
+    ax.set_xlabel("实际CO²排放量（Mt）")
+    ax.set_ylabel("模型拟合CO²排放量（Mt）")
     save_fig(fig, FIG_DIR, "06_OLS拟合值与真实值对比图")
 
 

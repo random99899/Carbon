@@ -36,7 +36,7 @@ PROBLEM_FIG_DIRS = {
 
 PROVINCE_FILE = DATA_DIR / "2022省级综合表.xlsx"
 NATIONAL_FILE = DATA_DIR / "全国数据.xlsx"
-CARBON_FILE = DATA_DIR / "附件1：2019-2025 年全国碳排放数据.csv"
+CARBON_FILE = DATA_DIR / "附件1：2019—2025 年全国碳排放数据.csv"
 
 
 def ensure_dirs() -> None:
@@ -107,24 +107,6 @@ def theil(values: pd.Series | np.ndarray) -> float:
     ratio = ratio[ratio > 0]
     return float(np.mean(ratio * np.log(ratio)))
 
-
-def dataframe_to_markdown(df: pd.DataFrame, floatfmt: str = ".3f") -> str:
-    headers = [str(col) for col in df.columns]
-    rows = []
-    for _, row in df.iterrows():
-        values = []
-        for value in row:
-            if isinstance(value, (float, np.floating)):
-                values.append(format(float(value), floatfmt))
-            else:
-                values.append(str(value))
-        rows.append(values)
-    lines = [
-        "| " + " | ".join(headers) + " |",
-        "| " + " | ".join(["---"] * len(headers)) + " |",
-    ]
-    lines.extend("| " + " | ".join(values) + " |" for values in rows)
-    return "\n".join(lines)
 
 
 def write_csv(df: pd.DataFrame, path: Path) -> None:
